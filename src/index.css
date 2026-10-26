@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Asap', sans-serif;
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Asap', sans-serif;
+  }
+  
+  html, body {
+    font-family: 'Asap', sans-serif;
+    font-weight: 400;
+    color: #1e293b;
+    background-color: #f8fafc;
+  }
+
+  /* Títulos: Asap ExtraBold (800) */
+  h1, h2, h3, .font-title {
+    font-family: 'Asap', sans-serif;
+    font-weight: 800;
+  }
+
+  /* Subtítulos: Asap SemiBold (600) */
+  h4, h5, h6, .font-subtitle {
+    font-family: 'Asap', sans-serif;
+    font-weight: 600;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  header, .no-print, button, .modal-backdrop {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}

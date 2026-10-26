@@ -1,0 +1,6 @@
+{
+  "name": "Painel de Acompanhamento de Projetos - Rede Salute",
+  "description": "Painel completo de acompanhamento e gestão de projetos, pilares estratégicos, ações e captação médica da Rede Salute.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

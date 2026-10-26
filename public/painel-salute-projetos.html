@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Acompanhamento - Projetos Estratégicos - Rede Salute</title>
+  <meta name="description" content="Dashboard interativo para gestão e acompanhamento de ações da Rede Salute - Projetos Estratégicos.">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            salute: {
+              navy: '#113269',
+              dark: '#0c244d',
+              primary: '#0066CC',
+              secondary: '#1E3A8A',
+              accent: '#FFCC00',
+              surface: '#F8FAFC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; background-color: #F8FAFC; color: #1e293b; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+  <!-- TOPO / CABEÇALHO (Estilo Gestaodeprojetossalute.live) -->
+  <header class="bg-[#113269] text-white border-b border-blue-900/60 sticky top-0 z-30 shadow-md">
+    <div class="w-full px-3 sm:px-5 lg:px-6">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo & Marca -->
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <i class="fa-solid fa-hospital text-xl"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-bold tracking-tight text-white uppercase font-sans">Rede Salute</span>
+              <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-900/80 text-blue-200 border border-blue-400/30">Projetos Estratégicos</span>
+            </div>
+            <p class="text-xs text-blue-200 font-medium">Plano Estratégico de Captação & Expansão Médica</p>
+          </div>
+        </div>
+
+        <!-- Menu & Ações Rápidas -->
+        <div class="flex items-center gap-3 no-print">
+          <button onclick="window.print()" class="px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white bg-[#0c2752] hover:bg-[#153c7a] rounded-lg border border-blue-900 transition flex items-center gap-2">
+            <i class="fa-solid fa-print"></i>
+            <span class="hidden sm:inline">Imprimir Relatório</span>
+          </button>
+          <button onclick="exportCSV()" class="px-3.5 py-2 text-xs font-bold text-[#113269] bg-[#FFCC00] hover:bg-[#e6b800] rounded-lg shadow-sm transition flex items-center gap-2 border border-amber-300">
+            <i class="fa-solid fa-file-arrow-down"></i>
+            <span class="hidden sm:inline">Exportar Planilha (CSV)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL (OCUPAÇÃO TOTAL DA TELA) -->
+  <main class="w-full px-2.5 sm:px-4 lg:px-5 py-4 flex-1 space-y-4">
+
+    <!-- CABEÇALHO DE SEÇÃO -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-slate-200">
+      <div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-[#113269] mb-1">
+          <i class="fa-solid fa-chart-line text-blue-600"></i>
+          <span>PLANO ESTRATÉGICO DE CAPTAÇÃO & EXPANSÃO MÉDICA</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-[#113269] tracking-tight">
+          Projetos Estratégicos
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">
+          Monitoramento em tempo real de ações, responsáveis, cronogramas e entregas da Rede Salute.
+        </p>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-slate-700 font-bold bg-white px-3.5 py-2 rounded-lg border border-slate-200 shadow-xs tabular-nums">
+        <i class="fa-regular fa-clock text-[#113269]"></i>
+        <span>Última sincronização: Outubro 2026</span>
+      </div>
+    </div>
+
+    <!-- CARDS DE RESUMO NO TOPO (MÉTRICAS) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="metric-cards">
+      <!-- Total -->
+      <div onclick="filterByStatus('todos')" class="cursor-pointer bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs hover:border-blue-400 hover:shadow-md transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total de Ações</span>
+          <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-[#113269] tabular-nums" id="card-total">0</span>
+          <span class="text-xs text-slate-500">ações mapeadas</span>
+        </div>
+        <div class="mt-3 text-xs text-blue-700 font-medium flex items-center gap-1">
+          <span>Ver todas as ações</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+
+      <!-- Em Andamento -->
+      <div onclick="filterByStatus('Em andamento')" class="cursor-pointer bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs hover:border-amber-400 hover:shadow-md transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Em Andamento</span>
+          <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-arrows-rotate animate-spin" style="animation-duration: 4s;"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-amber-600 tabular-nums" id="card-andamento">0</span>
+          <span class="text-xs text-slate-500" id="card-andamento-pct">(0%)</span>
+        </div>
+        <div class="mt-3 text-xs text-amber-700 font-medium flex items-center gap-1">
+          <span>Execução prioritária</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+
+      <!-- Concluídos -->
+      <div onclick="filterByStatus('Finalizado')" class="cursor-pointer bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs hover:border-emerald-400 hover:shadow-md transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Concluídos</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-emerald-600 tabular-nums" id="card-concluidos">0</span>
+          <span class="text-xs text-slate-500" id="card-concluidos-pct">(0%)</span>
+        </div>
+        <div class="mt-3 text-xs text-emerald-700 font-medium flex items-center gap-1">
+          <span>Entregas validadas</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+
+      <!-- Não Iniciado / Atenção -->
+      <div onclick="filterByStatus('Não iniciado')" class="cursor-pointer bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-400 hover:shadow-md transition">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Não Iniciados</span>
+          <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm">
+            <i class="fa-regular fa-hourglass-half"></i>
+          </div>
+        </div>
+        <div class="mt-2 flex items-baseline gap-2">
+          <span class="text-3xl font-extrabold text-slate-700 tabular-nums" id="card-pendentes">0</span>
+          <span class="text-xs text-slate-500" id="card-pendentes-pct">(0%)</span>
+        </div>
+        <div class="mt-3 text-xs text-slate-600 font-medium flex items-center gap-1">
+          <span>Próximas etapas</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- BARRA GLOBAL DE PROGRESSO -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-xs">
+      <div class="flex items-center justify-between text-xs mb-2 font-medium">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-[#113269]">Progresso Geral do Planejamento</span>
+          <span class="text-slate-400">·</span>
+          <span class="text-slate-600" id="progress-summary-text">Calculando...</span>
+        </div>
+        <span class="font-extrabold text-blue-700 tabular-nums text-sm" id="progress-total-pct">0%</span>
+      </div>
+      <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden p-0.5 border border-slate-200">
+        <div id="progress-total-bar" class="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 transition-all duration-700" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- FILTROS E PESQUISA -->
+    <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-xs space-y-4 no-print">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <!-- Campo de Busca -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+          </div>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Buscar por ação, pilar, responsável, detalhes (ex: Sinaxys, SIMERS, Gravataí)..." 
+            oninput="handleSearch(this.value)"
+            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+          >
+        </div>
+
+        <!-- Seletor de Responsável, Pilar e Calendário/Data -->
+        <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
+          <select id="pilar-select" onchange="handlePilarChange(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-semibold focus:ring-2 focus:ring-[#113269]">
+            <option value="todos">Todos os Pilares (16)</option>
+          </select>
+
+          <select id="resp-select" onchange="handleRespChange(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-semibold focus:ring-2 focus:ring-[#113269]">
+            <option value="todos">Todos os Responsáveis</option>
+            <option value="Raquel">Raquel</option>
+            <option value="Eduardo">Eduardo</option>
+            <option value="Karina">Karina</option>
+            <option value="Fabiano">Fabiano</option>
+            <option value="Erno">Erno</option>
+          </select>
+
+          <select id="date-select" onchange="handleDateChange(this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-slate-700 font-semibold focus:ring-2 focus:ring-[#113269]">
+            <option value="todos">📅 Todas as Datas</option>
+            <option value="set">Setembro (set)</option>
+            <option value="out">Outubro (out)</option>
+            <option value="nov">Novembro (nov)</option>
+            <option value="sem_data">A definir</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Segmented Buttons para Status -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+        <div class="inline-flex p-1 bg-slate-100 rounded-lg text-xs font-medium" id="status-tabs">
+          <button onclick="filterByStatus('todos')" data-status="todos" class="px-3 py-1.5 rounded-md transition status-tab active bg-[#FFCC00] text-[#113269] shadow-xs font-bold border border-amber-300">
+            Todos (<span id="tab-count-todos" class="tabular-nums">0</span>)
+          </button>
+          <button onclick="filterByStatus('Em andamento')" data-status="Em andamento" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900 status-tab">
+            Em Andamento (<span id="tab-count-andamento" class="tabular-nums">0</span>)
+          </button>
+          <button onclick="filterByStatus('Finalizado')" data-status="Finalizado" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900 status-tab">
+            Concluídos (<span id="tab-count-finalizados" class="tabular-nums">0</span>)
+          </button>
+          <button onclick="filterByStatus('Não iniciado')" data-status="Não iniciado" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900 status-tab">
+            Não Iniciados (<span id="tab-count-pendentes" class="tabular-nums">0</span>)
+          </button>
+        </div>
+
+        <div class="text-xs text-slate-500 font-medium">
+          Exibindo <span class="font-bold text-[#113269] tabular-nums" id="filtered-count">0</span> de <span id="total-count" class="font-semibold text-slate-700 tabular-nums">0</span> ações
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA PRINCIPAL DE AÇÕES / PROJETOS -->
+    <div class="w-full bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div class="w-full overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="bg-slate-50/95 text-[#113269] text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+              <th class="py-3.5 px-4 w-[22%] min-w-[240px] border-r border-slate-200">Pilar Estratégico</th>
+              <th class="py-3.5 px-3 w-12 text-center text-slate-500">#</th>
+              <th class="py-3.5 px-4 min-w-[280px]">Ação / Projeto (O que)</th>
+              <th class="py-3.5 px-4 w-[130px] whitespace-nowrap">Responsável</th>
+              <th class="py-3.5 px-4 w-[95px] text-center whitespace-nowrap">Início</th>
+              <th class="py-3.5 px-4 w-[110px] text-center whitespace-nowrap">Quando (Prazo)</th>
+              <th class="py-3.5 px-4 w-[140px] min-w-[120px]">Progresso</th>
+              <th class="py-3.5 px-4 w-[130px] text-center whitespace-nowrap">Status</th>
+              <th class="py-3.5 px-4 w-[80px] text-center no-print whitespace-nowrap">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="projects-table-body" class="divide-y divide-slate-100">
+            <!-- As linhas serão inseridas dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden py-12 text-center">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <i class="fa-solid fa-filter text-xl"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-700">Nenhuma ação encontrada</h3>
+        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Tente ajustar seus termos de busca ou remover os filtros aplicados.</p>
+        <button onclick="resetFilters()" class="mt-3 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 rounded-lg">
+          Limpar todos os filtros
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE DETALHES DA AÇÃO -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+      <!-- Topo Modal -->
+      <div class="bg-[#113269] text-white px-6 py-4 flex items-center justify-between border-b border-blue-900/60">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-600/30 text-blue-300 flex items-center justify-center text-sm border border-blue-400/20">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div>
+            <span class="text-[10px] uppercase font-bold tracking-wider text-blue-300" id="modal-category">Categoria</span>
+            <h3 class="text-base font-bold text-white leading-tight">Ficha Detalhada da Ação</h3>
+          </div>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white transition p-1.5 rounded-lg hover:bg-slate-800">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Corpo Modal -->
+      <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+        <!-- Pilar -->
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Pilar Estratégico</span>
+          <p class="text-sm font-bold text-blue-900 mt-0.5 bg-blue-50/60 p-2.5 rounded-lg border border-blue-100" id="modal-pilar"></p>
+        </div>
+
+        <!-- Ação -->
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ação (O que)</span>
+          <h4 class="text-base font-bold text-slate-900 mt-0.5" id="modal-acao"></h4>
+        </div>
+
+        <!-- Grid Responsável e Prazos -->
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Responsável (Quem)</span>
+            <div class="mt-1 flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center" id="modal-resp-avatar">R</div>
+              <span class="text-xs font-bold text-slate-800" id="modal-resp-name"></span>
+            </div>
+          </div>
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Início</span>
+            <p class="text-xs font-bold text-slate-800 mt-1 tabular-nums" id="modal-inicio"></p>
+          </div>
+          <div>
+            <span class="text-[11px] font-semibold text-slate-500 uppercase">Prazo (Quando)</span>
+            <p class="text-xs font-bold text-slate-800 mt-1 tabular-nums" id="modal-prazo"></p>
+          </div>
+        </div>
+
+        <!-- Como (Detalhamento Operacional) -->
+        <div>
+          <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Como (Instruções Operacionais e Notas)</span>
+          <div class="mt-1.5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed font-normal whitespace-pre-wrap" id="modal-como"></div>
+        </div>
+
+        <!-- Edição Rápida de Status e Progresso -->
+        <div class="pt-3 border-t border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">Atualizar Status Operacional:</span>
+            <select id="modal-status-select" onchange="updateCurrentActionStatus(this.value)" class="text-xs font-bold rounded-lg border border-slate-300 px-3 py-1.5 focus:ring-2 focus:ring-blue-500 bg-white">
+              <option value="Finalizado">Concluído (100%)</option>
+              <option value="Em andamento">Em Andamento</option>
+              <option value="Não iniciado">Não Iniciado (0%)</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between text-xs font-medium text-slate-700 mb-1">
+              <span>Ajustar Progresso Percentual:</span>
+              <span class="font-bold text-blue-700 tabular-nums" id="modal-prog-label">0%</span>
+            </div>
+            <input 
+              type="range" 
+              id="modal-prog-range" 
+              min="0" 
+              max="100" 
+              step="5" 
+              oninput="updateCurrentActionProgress(this.value)"
+              class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé Modal -->
+      <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-2">
+        <button onclick="closeModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-xs text-slate-500">
+    <div class="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">Rede Salute</span>
+        <span>·</span>
+        <span>Painel de Gestão e Captação de Talentos Médicos</span>
+      </div>
+      <p>Desenvolvido com precisão operacional · Referência gestaodeprojetossalute.live</p>
+    </div>
+  </footer>
+
+  <!-- DADOS E JAVASCRIPT STANDALONE -->
+  <script>
+    // DADOS IMPORTADOS DO DOCUMENTO OFICIAL
+    let projects = [
+  {
+    "id": "act-01",
+    "pilar": "CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO",
+    "pilarCategoria": "Inteligência de Mercado",
+    "acao": "Mapear cidades onde estamos inseridos (Ex: Pesquisa de mercado Gravataí)",
+    "responsavel": "Raquel",
+    "dataInicio": "02/set",
+    "prazo": "02/set",
+    "como": "Gravataí: Milenarium, Solaris, Sermeg, Docctor Med",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Gravataí"
+  },
+  {
+    "id": "act-02",
+    "pilar": "CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO",
+    "pilarCategoria": "Inteligência de Mercado",
+    "acao": "Mapeamento de clínicas concorrentes em Canoas",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Canoas: Mapeamento de clínicas concorrentes e oportunidades na região.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "Canoas"
+  },
+  {
+    "id": "act-03",
+    "pilar": "CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO",
+    "pilarCategoria": "Inteligência de Mercado",
+    "acao": "Mapeamento e identificação de clínicas em Alvorada",
+    "responsavel": "Raquel",
+    "dataInicio": "25/set",
+    "prazo": "30/set",
+    "como": "Alvorada: Policlínica Alvorada, Central de Consultas Alvorada, Mais Saúde, S.O.S. Consultas Médicas, AmorSaúde Alvorada, Clinica Ellos e Plasma.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Alvorada"
+  },
+  {
+    "id": "act-04",
+    "pilar": "CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO",
+    "pilarCategoria": "Inteligência de Mercado",
+    "acao": "Mapeamento de clínicas concorrentes em Cachoeirinha",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Cachoeirinha: Levantamento in loco e internet de consultórios e policlínicas.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "Cachoeirinha"
+  },
+  {
+    "id": "act-05",
+    "pilar": "COREME / PRECEPTORES UNIV. - VISITA E ENTREGA DE MATERIAL IMPRESSO",
+    "pilarCategoria": "Formação & Residências",
+    "acao": "Visitas presenciais aos COREMEs das universidades",
+    "responsavel": "Raquel",
+    "dataInicio": "01/out",
+    "prazo": "31/out",
+    "como": "Visitas presenciais aos COREMEs das universidades para falar da Salute e entregar material de apresentação para contratação de médicos que estão finalizando as residências.",
+    "status": "Em andamento",
+    "progresso": 50,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Universidades / COREMEs"
+  },
+  {
+    "id": "act-06",
+    "pilar": "COREME / PRECEPTORES UNIV. - VISITA E ENTREGA DE MATERIAL IMPRESSO",
+    "pilarCategoria": "Formação & Residências",
+    "acao": "Confecção e validação do material institucional de apresentação",
+    "responsavel": "Raquel",
+    "dataInicio": "23/set",
+    "prazo": "28/set",
+    "como": "Material em confecção, acordado de apresentar na reunião do dia 28/09 para o Dr Erno. Acordado fazer alguns ajustes.",
+    "status": "Em andamento",
+    "progresso": 75,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Diretoria Médica"
+  },
+  {
+    "id": "act-07",
+    "pilar": "COREME / PRECEPTORES UNIV. - VISITA E ENTREGA DE MATERIAL IMPRESSO",
+    "pilarCategoria": "Formação & Residências",
+    "acao": "Marcar as visitas às instituições e preceptores",
+    "responsavel": "Raquel",
+    "dataInicio": "01/out",
+    "prazo": "08/out",
+    "como": "Marcar as visitas as instituições após finalização do material de apresentação.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "Preceptores"
+  },
+  {
+    "id": "act-08",
+    "pilar": "EVENTOS - MAPEAR E ESTAR PRESENTE NOS PRINCIPAIS EVENTOS DE SAÚDE",
+    "pilarCategoria": "Relacionamento & Eventos",
+    "acao": "Ter calendário de eventos em POA e Região Metropolitana para prospecção",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Buscar junto a entidades, como AMRIGS, CRM, Organizadora de Eventos de médicos (Alex), Escolas de capacitação (Gustavo - Educare). Parceria com Representantes de Laboratórios buscando a agenda de eventos.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "AMRIGS / CRM / Educare"
+  },
+  {
+    "id": "act-09",
+    "pilar": "EX CORPO CLÍNICO - BUSCAR PROFISSIONAIS QUE JÁ ATENDERAM NA SALUTE",
+    "pilarCategoria": "Reativação de Talentos",
+    "acao": "Listar banco médico pelo RealClinic e montar lista de ex-profissionais sem restrições",
+    "responsavel": "Karina",
+    "dataInicio": "25/set",
+    "prazo": "29/set",
+    "como": "Listar banco médico pelo RealClinic e montar a lista dos ex profissionais que não temos restrições de voltar para Salute.",
+    "status": "Em andamento",
+    "progresso": 80,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "RealClinic"
+  },
+  {
+    "id": "act-10",
+    "pilar": "EX CORPO CLÍNICO - BUSCAR PROFISSIONAIS QUE JÁ ATENDERAM NA SALUTE",
+    "pilarCategoria": "Reativação de Talentos",
+    "acao": "Subir a listagem dos ex-profissionais e ativos para o novo CRM",
+    "responsavel": "Eduardo",
+    "dataInicio": "01/out",
+    "prazo": "10/out",
+    "como": "Subir a listagem dos ex profissionais para o novo CRM e também a listagem dos ativos. Importante verificar motivo da saída antes do contato.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Novo CRM"
+  },
+  {
+    "id": "act-11",
+    "pilar": "GRUPOS WPP - DIVULGAÇÃO DAS VAGAS NOS GRUPOS DAS ESPECIALIDADES",
+    "pilarCategoria": "Canais Diretos & Comunidades",
+    "acao": "Montar novo material para divulgação nos grupos e impulsionamento",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "08/out",
+    "como": "Montar novo material para divulgação nos grupos e de impulsionamento.",
+    "status": "Em andamento",
+    "progresso": 60,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-12",
+    "pilar": "GRUPOS WPP - DIVULGAÇÃO DAS VAGAS NOS GRUPOS DAS ESPECIALIDADES",
+    "pilarCategoria": "Canais Diretos & Comunidades",
+    "acao": "Mapear as necessidades de vagas da semana",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "Semanal",
+    "como": "Mapear as necessidades da semana. Mapeado nas reuniões de quinta-feira.",
+    "status": "Em andamento",
+    "progresso": 85,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-13",
+    "pilar": "GRUPOS WPP - DIVULGAÇÃO DAS VAGAS NOS GRUPOS DAS ESPECIALIDADES",
+    "pilarCategoria": "Canais Diretos & Comunidades",
+    "acao": "Divulgar semanalmente nos grupos as necessidades identificadas",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "Semanal",
+    "como": "Divulgar semanalmente nos grupos as necessidades mapeadas.",
+    "status": "Em andamento",
+    "progresso": 70,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-14",
+    "pilar": "GRUPOS WPP - DIVULGAÇÃO DAS VAGAS NOS GRUPOS DAS ESPECIALIDADES",
+    "pilarCategoria": "Canais Diretos & Comunidades",
+    "acao": "Estruturar calendário semanal de comunicação nos grupos",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "28/set",
+    "como": "Ter calendário semanal de comunicação nestes grupos. Identificar qual dia mais estratégico. Acordado envio toda a segunda-feira.",
+    "status": "Em andamento",
+    "progresso": 90,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-15",
+    "pilar": "PROGRAMA DE INDICAÇÃO INTERNA/EXTERNA",
+    "pilarCategoria": "Programas de Indicação",
+    "acao": "Definir frequência e canais internos de divulgação do programa",
+    "responsavel": "Raquel",
+    "dataInicio": "05/out",
+    "prazo": "08/out",
+    "como": "Interna: Definir a frequência e os canais de divulgação, grupo diretoria médica, odonto, fisios, grupo gestores.",
+    "status": "Em andamento",
+    "progresso": 50,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-16",
+    "pilar": "PROGRAMA DE INDICAÇÃO INTERNA/EXTERNA",
+    "pilarCategoria": "Programas de Indicação",
+    "acao": "Montar material de divulgação interna destacando o prêmio",
+    "responsavel": "Raquel",
+    "dataInicio": "05/out",
+    "prazo": "08/out",
+    "como": "Interna: Montar material para divulgação interna, falando do prêmio.",
+    "status": "Em andamento",
+    "progresso": 50,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-17",
+    "pilar": "PROGRAMA DE INDICAÇÃO INTERNA/EXTERNA",
+    "pilarCategoria": "Programas de Indicação",
+    "acao": "Alinhamento contínuo de objetivos na Reunião de Agendas (quintas)",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "Semanal",
+    "como": "Interna: Objetivos são gerados na reunião de Agendas (qui).",
+    "status": "Em andamento",
+    "progresso": 80,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-18",
+    "pilar": "PROGRAMA DE INDICAÇÃO INTERNA/EXTERNA",
+    "pilarCategoria": "Programas de Indicação",
+    "acao": "Enviar necessidades semanais para Recrutadores externos (Juliana/Leonardo)",
+    "responsavel": "Erno",
+    "dataInicio": "28/set",
+    "prazo": "Semanal",
+    "como": "Externa: Enviar as necessidades para Recrutadores (Juliana/Leonardo). Enviado semanalmente, após reunião e definições com a diretoria nas quintas-feiras.",
+    "status": "Em andamento",
+    "progresso": 75,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Juliana / Leonardo"
+  },
+  {
+    "id": "act-19",
+    "pilar": "PROGRAMA DE INDICAÇÃO INTERNA/EXTERNA",
+    "pilarCategoria": "Programas de Indicação",
+    "acao": "Definição da tabela oficial de valores de premiação por indicação",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "24/set",
+    "como": "Valores de premiação definidos: Médicos R$ 1.000,00; Terapeutas R$ 500,00; Representantes de Laboratórios R$ 500,00; Escalistas e funcionários Salute R$ 350,00; Líderes das unidades e equipe ligada a prospecção não recebe prêmio.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-20",
+    "pilar": "INSTAGRAM - PUBLICAÇÃO DE VAGAS E POSTS DE CONTRATAÇÃO",
+    "pilarCategoria": "Redes Sociais & Branding",
+    "acao": "Analisar junto ao Marketing espaço de divulgação de vagas no Instagram",
+    "responsavel": "Raquel",
+    "dataInicio": "25/set",
+    "prazo": "25/set",
+    "como": "Analisar junto ao marketing espaço de publicação no Instagram da Salute. Conversa com Ricardo (marketing) para orientações e oportunidades.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Ricardo (MKT)"
+  },
+  {
+    "id": "act-21",
+    "pilar": "INSTAGRAM - PUBLICAÇÃO DE VAGAS E POSTS DE CONTRATAÇÃO",
+    "pilarCategoria": "Redes Sociais & Branding",
+    "acao": "Avaliar estratégia de custos, alcance e impulsionamento no Instagram",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "28/set",
+    "como": "Verificar custos para publicações e impulsionamento. Acordado não impulsionar no momento. Fazer publicação de Stories, Feed e incluir nos Destaques, ações sem custo.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-22",
+    "pilar": "INSTAGRAM - PUBLICAÇÃO DE VAGAS E POSTS DE CONTRATAÇÃO",
+    "pilarCategoria": "Redes Sociais & Branding",
+    "acao": "Produzir peças e artes visuais para publicação no Instagram",
+    "responsavel": "Raquel",
+    "dataInicio": "05/out",
+    "prazo": "08/out",
+    "como": "Montar material para publicação (templates e chamadas atrativas).",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-23",
+    "pilar": "INSTAGRAM - PUBLICAÇÃO DE VAGAS E POSTS DE CONTRATAÇÃO",
+    "pilarCategoria": "Redes Sociais & Branding",
+    "acao": "Definir periodicidade e grade de publicações no Instagram",
+    "responsavel": "Raquel",
+    "dataInicio": "30/set",
+    "prazo": "02/out",
+    "como": "Definir periodicidade das publicações. Feed: Mensal | Stories: Semanal, nas sextas-feiras.",
+    "status": "Em andamento",
+    "progresso": 80,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-24",
+    "pilar": "LABORATÓRIOS - APROXIMAÇÃO DOS REPRESENTANTES PARA INDICAÇÃO",
+    "pilarCategoria": "Parcerias & Fornecedores",
+    "acao": "Mapeamento e aproximação dos contatos gerenciais dos representantes atuais",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "28/set",
+    "como": "Aproximação dos contatos Gerenciais dos Representantes Atuais. Buscar quem são os líderes dos laboratórios.",
+    "status": "Em andamento",
+    "progresso": 60,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-25",
+    "pilar": "LABORATÓRIOS - APROXIMAÇÃO DOS REPRESENTANTES PARA INDICAÇÃO",
+    "pilarCategoria": "Parcerias & Fornecedores",
+    "acao": "Apresentação formal do programa de indicações aos representantes",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "Em andamento",
+    "como": "Apresentar programa de indicações e premiação por profissional indicado.",
+    "status": "Em andamento",
+    "progresso": 50,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-26",
+    "pilar": "LABORATÓRIOS - APROXIMAÇÃO DOS REPRESENTANTES PARA INDICAÇÃO",
+    "pilarCategoria": "Parcerias & Fornecedores",
+    "acao": "Proposição de parcerias para eventos e encontros científicos",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Propor parceria para eventos conjuntos com a indústria farmacêutica e laboratórios.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Normal"
+  },
+  {
+    "id": "act-27",
+    "pilar": "LINKEDIN - DIVULGAÇÃO DE VAGAS E IMPULSIONAMENTO",
+    "pilarCategoria": "Recrutamento Profissional",
+    "acao": "Diagnóstico da plataforma LinkedIn Recruiter, alcance e custos",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "28/set",
+    "como": "Ter conhecimento total da plataforma para divulgação, estatísticas (alcance, custos). Custos e demais informações apresentado em reunião.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-28",
+    "pilar": "LINKEDIN - DIVULGAÇÃO DE VAGAS E IMPULSIONAMENTO",
+    "pilarCategoria": "Recrutamento Profissional",
+    "acao": "Aprovação de verba teste e impulsionamento pela página Salute",
+    "responsavel": "Fabiano",
+    "dataInicio": "28/set",
+    "prazo": "28/set",
+    "como": "Verificar custos para publicações e impulsionamento pela Página da Salute. Custos verificados, Fabiano fará aprovação de R$ 500,00 para teste, com o Gabriel. Liberado, impulsionar a vaga.",
+    "status": "Em andamento",
+    "progresso": 80,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Gabriel / Fabiano"
+  },
+  {
+    "id": "act-29",
+    "pilar": "LINKEDIN - DIVULGAÇÃO DE VAGAS E IMPULSIONAMENTO",
+    "pilarCategoria": "Recrutamento Profissional",
+    "acao": "Definição da periodicidade de vagas e postagens no LinkedIn",
+    "responsavel": "Raquel",
+    "dataInicio": "28/set",
+    "prazo": "Em andamento",
+    "como": "Definir periodicidade das publicações. Será feito teste inicial para demais definições.",
+    "status": "Em andamento",
+    "progresso": 40,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-30",
+    "pilar": "LINKEDIN - DIVULGAÇÃO DE VAGAS E IMPULSIONAMENTO",
+    "pilarCategoria": "Recrutamento Profissional",
+    "acao": "Criação do material e textos de copy para postagens no LinkedIn",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Montar material para publicação com diretrizes técnicas e benefícios da Salute.",
+    "status": "Em andamento",
+    "progresso": 30,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-31",
+    "pilar": "PLATAFORMA DE CAPTAÇÃO DE MÉDICOS (SINAXYS)",
+    "pilarCategoria": "Tecnologia de Recrutamento",
+    "acao": "Reunião de apresentação e onboarding da plataforma Sinaxys",
+    "responsavel": "Raquel",
+    "dataInicio": "22/set",
+    "prazo": "22/set",
+    "como": "Conhecer a plataforma. Realizado reunião com Bruno, da Sinaxys, apresentou a plataforma e forneceu um período teste.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Sinaxys (Bruno)"
+  },
+  {
+    "id": "act-32",
+    "pilar": "PLATAFORMA DE CAPTAÇÃO DE MÉDICOS (SINAXYS)",
+    "pilarCategoria": "Tecnologia de Recrutamento",
+    "acao": "Execução do período de testes operacionais (12 dias)",
+    "responsavel": "Raquel",
+    "dataInicio": "23/set",
+    "prazo": "05/out",
+    "como": "Período de teste - 12 dias operando na plataforma e testando candidaturas ativas.",
+    "status": "Em andamento",
+    "progresso": 70,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Sinaxys"
+  },
+  {
+    "id": "act-33",
+    "pilar": "PLATAFORMA DE CAPTAÇÃO DE MÉDICOS (SINAXYS)",
+    "pilarCategoria": "Tecnologia de Recrutamento",
+    "acao": "Análise de viabilidade financeira e contratação definitiva",
+    "responsavel": "Raquel",
+    "dataInicio": "05/out",
+    "prazo": "05/out",
+    "como": "Analisar viabilidade da contratação com base nos resultados do teste.",
+    "status": "Em andamento",
+    "progresso": 40,
+    "prioridade": "Alta"
+  },
+  {
+    "id": "act-34",
+    "pilar": "PLATAFORMA DE CAPTAÇÃO DE MÉDICOS (SINAXYS)",
+    "pilarCategoria": "Tecnologia de Recrutamento",
+    "acao": "Prospecção ativa de contatos de profissionais não Salute via plataforma",
+    "responsavel": "Eduardo",
+    "dataInicio": "28/set",
+    "prazo": "A definir",
+    "como": "Buscar contatos de profissionais não Salute via Plataforma para nutrição de pipeline.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Média"
+  },
+  {
+    "id": "act-35",
+    "pilar": "MEVO",
+    "pilarCategoria": "Parcerias Estratégicas",
+    "acao": "Contato com liderança da parceria MEVO para obtenção de listagem médica",
+    "responsavel": "Raquel",
+    "dataInicio": "25/set",
+    "prazo": "16/out",
+    "como": "Fazer contato Thalita (Responsável) da nossa parceria e buscar alguma listagem de profissionais da rede.",
+    "status": "Em andamento",
+    "progresso": 45,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "Thalita (Mevo)"
+  },
+  {
+    "id": "act-36",
+    "pilar": "PROFISSIONAIS DE INST. QUE CUIDAM DO CORPO CLÍNICO",
+    "pilarCategoria": "Relacionamento Institucional",
+    "acao": "Agendamento de reunião institucional com Milena (Hospital Blanc)",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "02/out",
+    "como": "Agendar reunião com Milena Hosp Blanc, após retorno das férias dela, que será dia 13/10.",
+    "status": "Em andamento",
+    "progresso": 60,
+    "prioridade": "Média",
+    "unidadeOuParceiro": "Hospital Blanc"
+  },
+  {
+    "id": "act-37",
+    "pilar": "PROFISSIONAIS DE INST. QUE CUIDAM DO CORPO CLÍNICO",
+    "pilarCategoria": "Relacionamento Institucional",
+    "acao": "Agendamento de reunião com representante William (Materiais Cirúrgicos)",
+    "responsavel": "Raquel",
+    "dataInicio": "A definir",
+    "prazo": "A definir",
+    "como": "Agendar reunião com William, representante de materiais cirúrgicos.",
+    "status": "Não iniciado",
+    "progresso": 0,
+    "prioridade": "Normal",
+    "unidadeOuParceiro": "William (Cirúrgicos)"
+  },
+  {
+    "id": "act-38",
+    "pilar": "PROFISSIONAIS DE INST. QUE CUIDAM DO CORPO CLÍNICO",
+    "pilarCategoria": "Relacionamento Institucional",
+    "acao": "Agendamento de reunião com Cristiane (Hospital São Lucas da PUCRS)",
+    "responsavel": "Raquel",
+    "dataInicio": "25/set",
+    "prazo": "Em andamento",
+    "como": "Agendar reunião com Cristiane, Hosp São Lucas da PUCRS para estreitamento de pontes com residentes e corpo clínico.",
+    "status": "Em andamento",
+    "progresso": 30,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Hospital São Lucas PUCRS"
+  },
+  {
+    "id": "act-39",
+    "pilar": "CRM COM PROGRAMA DE RELACIONAMENTO (RÉGUA)",
+    "pilarCategoria": "Sistemas & CRM",
+    "acao": "Treinamento de plataforma CRM com Márcyo, configuração de funil e banco",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "24/set",
+    "como": "Conhecer a plataforma com Márcyo - 25/9 | Adaptação dos filtros, funil - 2/10 | Alimentar banco de profissionais - 2/10.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "Márcyo"
+  },
+  {
+    "id": "act-40",
+    "pilar": "PUBLICAÇÃO SITE CRM (CREMERS)",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Consulta formal ao CRM/CREMERS sobre viabilidade de publicação de vagas",
+    "responsavel": "Raquel",
+    "dataInicio": "24/set",
+    "prazo": "24/set",
+    "como": "Buscar no site ou falar com o CRM para publicação de vagas. Realizado contato com o CREMERS e informaram que não realizam publicação de vagas para médicos.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "CREMERS"
+  },
+  {
+    "id": "act-41",
+    "pilar": "PUBLICAÇÃO DE VAGA NO SIMERS",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Contato telefônico inicial com o SIMERS sobre procedimento de divulgação",
+    "responsavel": "Raquel",
+    "dataInicio": "29/set",
+    "prazo": "30/set",
+    "como": "Buscar no site ou falar com o Simers para publicação de vagas. Contato por telefone, orientação é enviar e-mail solicitando orientações.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "SIMERS"
+  },
+  {
+    "id": "act-42",
+    "pilar": "PUBLICAÇÃO DE VAGA NO SIMERS",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Envio formal de e-mail e obtenção de formulário exclusivo do SIMERS",
+    "responsavel": "Raquel",
+    "dataInicio": "29/set",
+    "prazo": "30/set",
+    "como": "Envio de e-mail para o SIMERS com solicitação de orientações para publicação de vagas. Retornaram com formulário para divulgação de vagas, orientando que o Simers disponibiliza uma plataforma exclusiva e gratuita para divulgação de vagas aos associados, com objetivo de oferecer ao médico uma visão ampla do mercado de trabalho no RS.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "SIMERS"
+  },
+  {
+    "id": "act-43",
+    "pilar": "PUBLICAÇÃO DE VAGA NO SIMERS",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Cadastro detalhado e submissão da vaga na plataforma SIMERS (60 dias)",
+    "responsavel": "Raquel",
+    "dataInicio": "29/set",
+    "prazo": "30/set",
+    "como": "Retorno com os dados da vaga para divulgação. Vaga ficará disponível na plataforma do Simers por 60 dias.",
+    "status": "Em andamento",
+    "progresso": 90,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "SIMERS"
+  },
+  {
+    "id": "act-44",
+    "pilar": "PUBLICAÇÃO DE VAGA NA AMRIGS",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Contato preliminar com a AMRIGS para entendimento do processo de homologação",
+    "responsavel": "Raquel",
+    "dataInicio": "29/set",
+    "prazo": "30/set",
+    "como": "Buscar no site ou falar com a AMRIGS para publicação de vagas. Contato por telefone, orientação é enviar e-mail que será respondido com formulário para preenchimento e posterior avaliação do comitê de boas práticas médicas e do gestor da AMRIGS.",
+    "status": "Finalizado",
+    "progresso": 100,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "AMRIGS"
+  },
+  {
+    "id": "act-45",
+    "pilar": "PUBLICAÇÃO DE VAGA NA AMRIGS",
+    "pilarCategoria": "Órgãos de Classe",
+    "acao": "Submissão de e-mail e aguardo do formulário do comitê de boas práticas AMRIGS",
+    "responsavel": "Raquel",
+    "dataInicio": "30/set",
+    "prazo": "30/set",
+    "como": "Envio de e-mail para a AMRIGS com solicitação de orientações para publicação de vagas. Aguardar formulário para preenchimento e homologação pelo comitê.",
+    "status": "Em andamento",
+    "progresso": 50,
+    "prioridade": "Alta",
+    "unidadeOuParceiro": "AMRIGS"
+  }
+];
+
+    let activeFilter = 'todos';
+    let searchQuery = '';
+    let selectedPilar = 'todos';
+    let selectedResp = 'todos';
+    let selectedDate = 'todos';
+    let currentModalId = null;
+
+    // Inicialização
+    function init() {
+      populatePilarDropdown();
+      renderDashboard();
+    }
+
+    function populatePilarDropdown() {
+      const pilarSet = new Set(projects.map(p => p.pilar));
+      const select = document.getElementById('pilar-select');
+      pilarSet.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p.length > 50 ? p.substring(0, 48) + '...' : p;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderDashboard() {
+      // 1. Filtrar
+      const filtered = projects.filter(item => {
+        const matchesStatus = (activeFilter === 'todos') || (item.status === activeFilter);
+        const matchesPilar = (selectedPilar === 'todos') || (item.pilar === selectedPilar);
+        const matchesResp = (selectedResp === 'todos') || (item.responsavel.toLowerCase() === selectedResp.toLowerCase());
+        
+        // Filtro de Data
+        const matchesDate = (() => {
+          if (selectedDate === 'todos') return true;
+          const d = selectedDate.toLowerCase().trim();
+          if (d === 'sem_data') {
+            return (item.dataInicio && item.dataInicio.toLowerCase().includes('definir')) ||
+                   (item.prazo && item.prazo.toLowerCase().includes('definir'));
+          }
+          return (item.dataInicio && item.dataInicio.toLowerCase().includes(d)) ||
+                 (item.prazo && item.prazo.toLowerCase().includes(d));
+        })();
+
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = !q || 
+          item.acao.toLowerCase().includes(q) ||
+          item.pilar.toLowerCase().includes(q) ||
+          item.responsavel.toLowerCase().includes(q) ||
+          item.como.toLowerCase().includes(q) ||
+          (item.unidadeOuParceiro && item.unidadeOuParceiro.toLowerCase().includes(q));
+
+        return matchesStatus && matchesPilar && matchesResp && matchesDate && matchesSearch;
+      });
+
+      // 2. Atualizar Métricas Topo
+      const total = projects.length;
+      const andamento = projects.filter(p => p.status === 'Em andamento').length;
+      const finalizados = projects.filter(p => p.status === 'Finalizado').length;
+      const pendentes = projects.filter(p => p.status === 'Não iniciado').length;
+
+      document.getElementById('card-total').textContent = total;
+      document.getElementById('card-andamento').textContent = andamento;
+      document.getElementById('card-andamento-pct').textContent = '(' + Math.round((andamento / total) * 100) + '%)';
+      document.getElementById('card-concluidos').textContent = finalizados;
+      document.getElementById('card-concluidos-pct').textContent = '(' + Math.round((finalizados / total) * 100) + '%)';
+      document.getElementById('card-pendentes').textContent = pendentes;
+      document.getElementById('card-pendentes-pct').textContent = '(' + Math.round((pendentes / total) * 100) + '%)';
+
+      document.getElementById('tab-count-todos').textContent = total;
+      document.getElementById('tab-count-andamento').textContent = andamento;
+      document.getElementById('tab-count-finalizados').textContent = finalizados;
+      document.getElementById('tab-count-pendentes').textContent = pendentes;
+
+      document.getElementById('filtered-count').textContent = filtered.length;
+      document.getElementById('total-count').textContent = total;
+
+      // Progresso Médio Ponderado
+      const sumProg = projects.reduce((acc, cur) => acc + (cur.progresso || 0), 0);
+      const avgProg = Math.round(sumProg / total);
+      document.getElementById('progress-total-pct').textContent = avgProg + '%';
+      document.getElementById('progress-total-bar').style.width = avgProg + '%';
+      document.getElementById('progress-summary-text').textContent = finalizados + ' concluídas, ' + andamento + ' em andamento, ' + pendentes + ' a iniciar';
+
+      // 3. Renderizar Tabela
+      const tbody = document.getElementById('projects-table-body');
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        document.getElementById('empty-state').classList.remove('hidden');
+      } else {
+        document.getElementById('empty-state').classList.add('hidden');
+      }
+
+      // Agrupamento contíguo por pilar
+      const pillarGroups = [];
+      let currentGroup = null;
+
+      filtered.forEach((p, idx) => {
+        if (!currentGroup || currentGroup.pilar !== p.pilar) {
+          currentGroup = {
+            pilar: p.pilar,
+            pilarCategoria: p.pilarCategoria,
+            items: [{ p, idx: idx + 1 }]
+          };
+          pillarGroups.push(currentGroup);
+        } else {
+          currentGroup.items.push({ p, idx: idx + 1 });
+        }
+      });
+
+      pillarGroups.forEach(group => {
+        const rowCount = group.items.length;
+
+        group.items.forEach((itemObj, itemIndex) => {
+          const p = itemObj.p;
+          const isFirstInPillar = itemIndex === 0;
+          const isLastInPillar = itemIndex === rowCount - 1;
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-blue-50/40 transition-colors group ' + (isLastInPillar ? 'border-b-2 border-slate-200/90' : 'border-b border-slate-100');
+
+          // Cores de Status
+          let statusBadge = '';
+          if (p.status === 'Finalizado') {
+            statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-circle-check text-[10px]"></i> Concluído</span>';
+          } else if (p.status === 'Em andamento') {
+            statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-arrows-rotate text-[10px]"></i> Em Andamento</span>';
+          } else {
+            statusBadge = '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200"><i class="fa-regular fa-clock text-[10px]"></i> Não Iniciado</span>';
+          }
+
+          // Cor de Progresso
+          let barColor = 'bg-blue-600';
+          if (p.progresso === 100) barColor = 'bg-emerald-500';
+          else if (p.progresso < 30) barColor = 'bg-slate-400';
+
+          // Avatar do Responsável
+          const avatarColors = {
+            'Raquel': 'bg-indigo-600 text-white',
+            'Eduardo': 'bg-blue-600 text-white',
+            'Karina': 'bg-pink-600 text-white',
+            'Fabiano': 'bg-amber-600 text-white',
+            'Erno': 'bg-emerald-600 text-white'
+          };
+          const avColor = avatarColors[p.responsavel] || 'bg-slate-600 text-white';
+
+          let pillarCell = '';
+          if (isFirstInPillar) {
+            pillarCell = `
+              <td rowspan="${rowCount}" class="py-4 px-4 align-top bg-slate-50/80 border-r border-slate-200 text-slate-800 transition-colors">
+                <div class="sticky top-24 space-y-1.5">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-[#113269] bg-blue-100/70 px-2 py-0.5 rounded border border-blue-200 inline-block font-sans">
+                    ${group.pilarCategoria}
+                  </span>
+                  <h4 class="text-xs font-bold text-[#113269] leading-snug break-words font-sans" title="${group.pilar}">
+                    ${group.pilar}
+                  </h4>
+                  <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium pt-1 font-sans">
+                    <span class="font-bold text-[#113269] tabular-nums">${rowCount}</span>
+                    <span>${rowCount === 1 ? 'ação vinculada' : 'ações vinculadas'}</span>
+                  </div>
+                </div>
+              </td>
+            `;
+          }
+
+          tr.innerHTML = `
+            ${pillarCell}
+            <td class="py-3.5 px-3 text-center text-xs font-bold text-slate-400 tabular-nums font-sans">${itemObj.idx}</td>
+            <td class="py-3.5 px-4 font-sans">
+              <div class="text-xs font-semibold text-slate-900">${p.acao}</div>
+              ${p.unidadeOuParceiro ? '<div class="text-[10px] text-[#113269] font-bold mt-0.5"><i class="fa-solid fa-tag text-[9px] mr-1"></i>' + p.unidadeOuParceiro + '</div>' : ''}
+            </td>
+            <td class="py-3.5 px-4 whitespace-nowrap font-sans">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-full ${avColor} flex items-center justify-center text-[10px] font-bold">${p.responsavel.charAt(0)}</span>
+                <span class="text-xs font-medium text-slate-700">${p.responsavel}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-center text-xs font-medium text-slate-700 whitespace-nowrap tabular-nums font-sans">${p.dataInicio || '-'}</td>
+            <td class="py-3.5 px-4 text-center text-xs font-semibold text-slate-800 whitespace-nowrap tabular-nums font-sans">${p.prazo || '-'}</td>
+            <td class="py-3.5 px-4 font-sans">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                  <div class="h-full rounded-full ${barColor}" style="width: ${p.progresso}%"></div>
+                </div>
+                <span class="text-xs font-bold text-[#113269] w-8 text-right tabular-nums font-sans">${p.progresso}%</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4 text-center whitespace-nowrap font-sans">${statusBadge}</td>
+            <td class="py-3.5 px-4 text-center no-print whitespace-nowrap font-sans">
+              <button onclick="openModal('${p.id}')" class="px-2.5 py-1 text-xs font-bold text-[#113269] hover:text-white bg-slate-100 hover:bg-[#113269] rounded-lg transition border border-slate-200 flex items-center gap-1 mx-auto">
+                <i class="fa-solid fa-eye text-[11px]"></i>
+                <span>Ver</span>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // Filtros
+    function filterByStatus(status) {
+      activeFilter = status;
+      document.querySelectorAll('.status-tab').forEach(tab => {
+        if (tab.getAttribute('data-status') === status) {
+          tab.classList.add('bg-[#FFCC00]', 'text-[#113269]', 'shadow-xs', 'font-bold', 'border', 'border-amber-300');
+          tab.classList.remove('text-slate-600', 'bg-white', 'text-slate-900');
+        } else {
+          tab.classList.remove('bg-[#FFCC00]', 'text-[#113269]', 'shadow-xs', 'font-bold', 'border', 'border-amber-300', 'bg-white', 'text-slate-900');
+          tab.classList.add('text-slate-600');
+        }
+      });
+      renderDashboard();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val;
+      renderDashboard();
+    }
+
+    function handlePilarChange(val) {
+      selectedPilar = val;
+      renderDashboard();
+    }
+
+    function handleRespChange(val) {
+      selectedResp = val;
+      renderDashboard();
+    }
+
+    function handleDateChange(val) {
+      selectedDate = val;
+      renderDashboard();
+    }
+
+    function resetFilters() {
+      activeFilter = 'todos';
+      searchQuery = '';
+      selectedPilar = 'todos';
+      selectedResp = 'todos';
+      selectedDate = 'todos';
+      document.getElementById('search-input').value = '';
+      document.getElementById('pilar-select').value = 'todos';
+      document.getElementById('resp-select').value = 'todos';
+      document.getElementById('date-select').value = 'todos';
+      filterByStatus('todos');
+    }
+
+    // Modal
+    function openModal(id) {
+      const p = projects.find(item => item.id === id);
+      if (!p) return;
+      currentModalId = id;
+
+      document.getElementById('modal-category').textContent = p.pilarCategoria;
+      document.getElementById('modal-pilar').textContent = p.pilar;
+      document.getElementById('modal-acao').textContent = p.acao;
+      document.getElementById('modal-resp-name').textContent = p.responsavel;
+      document.getElementById('modal-resp-avatar').textContent = p.responsavel.charAt(0);
+      document.getElementById('modal-inicio').textContent = p.dataInicio || 'Não definida';
+      document.getElementById('modal-prazo').textContent = p.prazo || 'Não definido';
+      document.getElementById('modal-como').textContent = p.como || 'Sem detalhamento operacional adicional.';
+
+      document.getElementById('modal-status-select').value = p.status;
+      document.getElementById('modal-prog-range').value = p.progresso;
+      document.getElementById('modal-prog-label').textContent = p.progresso + '%';
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+      currentModalId = null;
+    }
+
+    function updateCurrentActionStatus(newStatus) {
+      if (!currentModalId) return;
+      const p = projects.find(item => item.id === currentModalId);
+      if (!p) return;
+      p.status = newStatus;
+      if (newStatus === 'Finalizado') {
+        p.progresso = 100;
+      } else if (newStatus === 'Não iniciado') {
+        p.progresso = 0;
+      } else if (p.progresso === 0 || p.progresso === 100) {
+        p.progresso = 50;
+      }
+      document.getElementById('modal-prog-range').value = p.progresso;
+      document.getElementById('modal-prog-label').textContent = p.progresso + '%';
+      renderDashboard();
+    }
+
+    function updateCurrentActionProgress(newVal) {
+      if (!currentModalId) return;
+      const p = projects.find(item => item.id === currentModalId);
+      if (!p) return;
+      const val = parseInt(newVal, 10);
+      p.progresso = val;
+      document.getElementById('modal-prog-label').textContent = val + '%';
+      if (val === 100) {
+        p.status = 'Finalizado';
+        document.getElementById('modal-status-select').value = 'Finalizado';
+      } else if (val === 0) {
+        p.status = 'Não iniciado';
+        document.getElementById('modal-status-select').value = 'Não iniciado';
+      } else {
+        p.status = 'Em andamento';
+        document.getElementById('modal-status-select').value = 'Em andamento';
+      }
+      renderDashboard();
+    }
+
+    // Exportação CSV
+    function exportCSV() {
+      const headers = ['ID', 'Pilar', 'Categoria', 'Ação (O que)', 'Responsável (Quem)', 'Início', 'Prazo (Quando)', 'Progresso (%)', 'Status', 'Como (Instruções)'];
+      const rows = projects.map(p => [
+        p.id,
+        '"' + (p.pilar || '').replace(/"/g, '""') + '"',
+        '"' + (p.pilarCategoria || '').replace(/"/g, '""') + '"',
+        '"' + (p.acao || '').replace(/"/g, '""') + '"',
+        '"' + (p.responsavel || '').replace(/"/g, '""') + '"',
+        '"' + (p.dataInicio || '').replace(/"/g, '""') + '"',
+        '"' + (p.prazo || '').replace(/"/g, '""') + '"',
+        p.progresso,
+        '"' + (p.status || '').replace(/"/g, '""') + '"',
+        '"' + (p.como || '').replace(/"/g, '""') + '"'
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,﻿' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', 'salute-gestao-projetos.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Inicializar na carga da página
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
