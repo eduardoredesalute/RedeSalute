@@ -29,12 +29,12 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
   onQuickStatusChange,
   onResetFilters
 }) => {
-  // Agrupamento unificado por Pilar Estratégico preservando o índice global
+  // Agrupamento unificado por Pilar Estratégico preservando a estrutura de ordem dos pilares e ações
   const pillarGroups = useMemo<PillarGroup[]>(() => {
     const groups: { [key: string]: PillarGroup } = {};
     const order: string[] = [];
 
-    projects.forEach((action, idx) => {
+    projects.forEach((action) => {
       const key = action.pilar;
       if (!groups[key]) {
         groups[key] = {
@@ -44,7 +44,18 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
         };
         order.push(key);
       }
-      groups[key].items.push({ action, globalIndex: idx + 1 });
+      groups[key].items.push({ action, globalIndex: action.ordem || 0 });
+    });
+
+    // Garante que todas as ações tenham sua numeração estrita começando de 1
+    let counter = 1;
+    order.forEach(key => {
+      groups[key].items.forEach(item => {
+        if (!item.globalIndex) {
+          item.globalIndex = counter;
+        }
+        counter++;
+      });
     });
 
     return order.map(k => groups[k]);
@@ -194,8 +205,8 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
                     )}
 
                     {/* # Index da Ação */}
-                    <td className="py-3.5 px-3 text-center text-xs font-bold text-slate-400 tabular-nums font-sans">
-                      {itemObj.globalIndex}
+                    <td className="py-3.5 px-3 text-center text-xs font-bold text-slate-500 tabular-nums font-sans">
+                      {itemObj.action.ordem || itemObj.globalIndex}
                     </td>
 
                     {/* Ação (O que) */}

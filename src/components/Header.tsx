@@ -203,51 +203,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Seletor de Visualização & Ações */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 no-print">
-            
-            {/* Alternador de visualização */}
-            <div className="p-1 bg-[#0b244d] rounded-lg border border-blue-900/70 flex items-center gap-1 shadow-inner">
-              <button
-                onClick={() => onViewChange('table')}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${
-                  currentView === 'table'
-                    ? 'bg-[#FFCC00] text-[#113269] shadow-xs border border-amber-300'
-                    : 'text-slate-200 hover:text-white hover:bg-white/10'
-                }`}
-                title="Tabela de Ações"
-              >
-                <Table className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Tabela</span>
-              </button>
-
-              <button
-                onClick={() => onViewChange('pillars')}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${
-                  currentView === 'pillars'
-                    ? 'bg-[#FFCC00] text-[#113269] shadow-xs border border-amber-300'
-                    : 'text-slate-200 hover:text-white hover:bg-white/10'
-                }`}
-                title="Visão por Pilares Estratégicos"
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Por Pilares</span>
-              </button>
-
-              <button
-                onClick={() => onViewChange('kanban')}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition ${
-                  currentView === 'kanban'
-                    ? 'bg-[#FFCC00] text-[#113269] shadow-xs border border-amber-300'
-                    : 'text-slate-200 hover:text-white hover:bg-white/10'
-                }`}
-                title="Quadro Kanban de Status"
-              >
-                <Kanban className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Kanban</span>
-              </button>
-            </div>
-
+          {/* Ações no Header */}
+          <div className="flex items-center gap-2 sm:gap-2.5 no-print">
             {/* Nova Ação */}
             <button
               onClick={onOpenNewModal}
@@ -256,7 +213,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span className="whitespace-nowrap">Nova Ação</span>
             </button>
-
           </div>
         </div>
       </div>

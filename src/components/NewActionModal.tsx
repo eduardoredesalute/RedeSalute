@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
-import { X, Plus, Building2 } from 'lucide-react';
+import { X, Plus, Building2, Calendar, Clock } from 'lucide-react';
 import { ProjectAction } from '../data/projectsData';
+import { 
+  dateToIso, 
+  isoToDisplayDate, 
+  getTodayFormatted, 
+  getAddDaysFormatted 
+} from '../utils/dateUtils';
 
 interface NewActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddAction: (newAction: ProjectAction) => void;
   pilares: string[];
+  existingActions?: ProjectAction[];
 }
 
 export const NewActionModal: React.FC<NewActionModalProps> = ({
   isOpen,
   onClose,
   onAddAction,
-  pilares
+  pilares,
+  existingActions
 }) => {
   if (!isOpen) return null;
 
-  const [pilar, setPilar] = useState<string>(pilares[0] || 'CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO');
-  const [categoria, setCategoria] = useState<string>('Captação Médica');
+  const defaultPilar = pilares[0] || 'CLÍNICAS CONCORRENTES - BUSCA ATIVA PELA INTERNET OU IN LOCO';
+  const defaultCategory = existingActions?.find(
+    a => a.pilar.trim().toLowerCase() === defaultPilar.trim().toLowerCase()
+  )?.pilarCategoria || 'Estratégico';
+
+  const [pilar, setPilar] = useState<string>(defaultPilar);
+  const [categoria, setCategoria] = useState<string>(defaultCategory);
   const [acao, setAcao] = useState<string>('');
   const [responsavel, setResponsavel] = useState<string>('Raquel');
   const [dataInicio, setDataInicio] = useState<string>('');
@@ -27,6 +40,18 @@ export const NewActionModal: React.FC<NewActionModalProps> = ({
   const [como, setComo] = useState<string>('');
   const [status, setStatus] = useState<ProjectAction['status']>('Não iniciado');
   const [progresso, setProgresso] = useState<number>(0);
+
+  const handlePilarChange = (newPilar: string) => {
+    setPilar(newPilar);
+    if (existingActions) {
+      const match = existingActions.find(
+        a => a.pilar.trim().toLowerCase() === newPilar.trim().toLowerCase()
+      );
+      if (match?.pilarCategoria) {
+        setCategoria(match.pilarCategoria);
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +113,7 @@ export const NewActionModal: React.FC<NewActionModalProps> = ({
             </label>
             <select
               value={pilar}
-              onChange={e => setPilar(e.target.value)}
+              onChange={e => handlePilarChange(e.target.value)}
               className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
               required
             >
@@ -155,12 +180,49 @@ export const NewActionModal: React.FC<NewActionModalProps> = ({
                 Início
               </label>
               <input
-                type="text"
-                value={dataInicio}
-                onChange={e => setDataInicio(e.target.value)}
-                placeholder="Ex: 01/out"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-sans tabular-nums"
+                type="date"
+                value={dateToIso(dataInicio)}
+                onChange={e => {
+                  if (e.target.value) setDataInicio(isoToDisplayDate(e.target.value));
+                }}
+                className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-sans tabular-nums text-xs font-semibold cursor-pointer"
               />
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setDataInicio('Semanal')}
+                  className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                    dataInicio.toLowerCase() === 'semanal'
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                      : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                  }`}
+                >
+                  Semanal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDataInicio('Mensal')}
+                  className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                    dataInicio.toLowerCase() === 'mensal'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                  }`}
+                >
+                  Mensal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDataInicio(getTodayFormatted())}
+                  className="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 rounded hover:bg-blue-50 hover:text-blue-700 transition"
+                >
+                  Hoje
+                </button>
+              </div>
+              {dataInicio && (
+                <p className="text-[10px] text-blue-700 font-bold mt-1">
+                  Definido: {dataInicio}
+                </p>
+              )}
             </div>
 
             <div>
@@ -168,14 +230,59 @@ export const NewActionModal: React.FC<NewActionModalProps> = ({
                 Prazo de Entrega
               </label>
               <input
-                type="text"
-                value={prazo}
-                onChange={e => setPrazo(e.target.value)}
-                placeholder="Ex: 15/out ou Semanal"
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-sans tabular-nums"
+                type="date"
+                value={dateToIso(prazo)}
+                onChange={e => {
+                  if (e.target.value) setPrazo(isoToDisplayDate(e.target.value));
+                }}
+                className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-sans tabular-nums text-xs font-semibold cursor-pointer"
               />
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setPrazo('Semanal')}
+                  className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                    prazo.toLowerCase() === 'semanal'
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                      : 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                  }`}
+                >
+                  Semanal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrazo('Mensal')}
+                  className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                    prazo.toLowerCase() === 'mensal'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                  }`}
+                >
+                  Mensal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrazo(getTodayFormatted())}
+                  className="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 rounded hover:bg-blue-50 hover:text-blue-700 transition"
+                >
+                  Hoje
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrazo(getAddDaysFormatted(7))}
+                  className="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 rounded hover:bg-blue-50 hover:text-blue-700 transition"
+                >
+                  +7d
+                </button>
+              </div>
+              {prazo && (
+                <p className="text-[10px] text-blue-700 font-bold mt-1">
+                  Definido: {prazo}
+                </p>
+              )}
             </div>
           </div>
+
 
           {/* Unidade ou Parceiro */}
           <div>

@@ -106,3 +106,50 @@ export const formatShortDate = (date: Date): string => {
   return `${day}/${month}`;
 };
 
+/**
+ * Converte uma data nos formatos aceitos no sistema (ex: "01/10", "23/set", "15/02/2026")
+ * para o formato ISO YYYY-MM-DD utilizado no input type="date".
+ */
+export const dateToIso = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  const clean = dateStr.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+  const parsed = parsePrazoDate(clean);
+  if (!parsed || isNaN(parsed.getTime())) return '';
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, '0');
+  const day = String(parsed.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Converte valor vindo de input type="date" (YYYY-MM-DD) para string padrão no sistema (DD/MM).
+ */
+export const isoToDisplayDate = (isoStr: string): string => {
+  if (!isoStr) return '';
+  const parts = isoStr.split('-');
+  if (parts.length === 3) {
+    const [, month, day] = parts;
+    return `${day}/${month}`;
+  }
+  return isoStr;
+};
+
+/**
+ * Retorna a data de hoje formatada como DD/MM.
+ */
+export const getTodayFormatted = (): string => {
+  const now = new Date();
+  return formatShortDate(now);
+};
+
+/**
+ * Retorna a data de hoje + N dias formatada como DD/MM.
+ */
+export const getAddDaysFormatted = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return formatShortDate(d);
+};

@@ -28,6 +28,10 @@ import {
   DollarSign, 
   Activity 
 } from 'lucide-react';
+import { 
+  insertAndRenumberAction, 
+  renumberAndOrganizeActions 
+} from './utils/actionUtils';
 
 const WORKSPACES_STORAGE_KEY = 'rede_salute_workspaces_v5';
 const LAST_WORKSPACE_KEY = 'rede_salute_last_workspace_id';
@@ -41,7 +45,10 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.map((ws: ProjectWorkspace) => ({
+            ...ws,
+            actions: renumberAndOrganizeActions(ws.actions || [])
+          }));
         }
       }
       // Migração de versões anteriores: carregar INITIAL_WORKSPACES atualizados e preservar painéis customizados
@@ -52,13 +59,19 @@ export default function App() {
           const customWorkspaces = parsedLegacy.filter(
             (ws: ProjectWorkspace) => !['projetos-estrategicos', 'receitas-internas', 'exames'].includes(ws.id)
           );
-          return [...INITIAL_WORKSPACES, ...customWorkspaces];
+          return [...INITIAL_WORKSPACES, ...customWorkspaces].map((ws: ProjectWorkspace) => ({
+            ...ws,
+            actions: renumberAndOrganizeActions(ws.actions || [])
+          }));
         }
       }
     } catch (e) {
       console.error('Erro ao ler workspaces do localStorage:', e);
     }
-    return INITIAL_WORKSPACES;
+    return INITIAL_WORKSPACES.map((ws: ProjectWorkspace) => ({
+      ...ws,
+      actions: renumberAndOrganizeActions(ws.actions || [])
+    }));
   });
 
   // Salvar workspaces no localStorage
@@ -121,9 +134,17 @@ export default function App() {
   const [isNewActionOpen, setIsNewActionOpen] = useState<boolean>(false);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState<boolean>(false);
 
-  // Lista única de Pilares e Responsáveis para filtros do projeto ativo
+  // Lista única de Pilares mantendo a estrutura e ordem de aparição dos pilares
   const allPilares = useMemo(() => {
-    return Array.from(new Set(projects.map(p => p.pilar))).sort();
+    const seen = new Set<string>();
+    const list: string[] = [];
+    projects.forEach(p => {
+      if (!seen.has(p.pilar)) {
+        seen.add(p.pilar);
+        list.push(p.pilar);
+      }
+    });
+    return list;
   }, [projects]);
 
   const allResponsaveis = useMemo(() => {
@@ -223,12 +244,12 @@ export default function App() {
   };
 
   const handleDeleteAction = (id: string) => {
-    updateActiveWorkspaceActions(prev => prev.filter(p => p.id !== id));
+    updateActiveWorkspaceActions(prev => renumberAndOrganizeActions(prev.filter(p => p.id !== id)));
     setSelectedAction(null);
   };
 
   const handleAddAction = (newAction: ProjectAction) => {
-    updateActiveWorkspaceActions(prev => [newAction, ...prev]);
+    updateActiveWorkspaceActions(prev => insertAndRenumberAction(prev, newAction));
     setIsNewActionOpen(false);
   };
 
@@ -385,6 +406,7 @@ export default function App() {
           onClose={() => setIsNewActionOpen(false)}
           onAddAction={handleAddAction}
           pilares={allPilares.length > 0 ? allPilares : ['AÇÕES OPERACIONAIS']}
+          existingActions={projects}
         />
       )}
 

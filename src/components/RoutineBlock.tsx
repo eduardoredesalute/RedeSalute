@@ -202,28 +202,8 @@ export const RoutineBlock: React.FC<RoutineBlockProps> = ({
                       : 'hover:bg-purple-50/30 bg-white'
                   }`}
                 >
-                  {/* LADO ESQUERDO: CHECKBOX + INFORMAÇÕES COMPLETAS DA AÇÃO */}
-                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                    {/* BOTÃO INTERATIVO DO CHECK DE FEITO */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleToggleCheck(action.id, e)}
-                      className={`shrink-0 mt-0.5 p-1 rounded-xl transition flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-purple-500 ${
-                        isChecked
-                          ? 'text-emerald-600 hover:text-emerald-700 bg-emerald-100/80 hover:bg-emerald-200/80'
-                          : 'text-slate-400 hover:text-purple-600 hover:bg-purple-100/60'
-                      }`}
-                      title={isChecked ? 'Marcar como não feito' : 'Marcar como feito esta semana'}
-                    >
-                      {isChecked ? (
-                        <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-                      ) : (
-                        <Circle className="w-7 h-7" />
-                      )}
-                    </button>
-
-                    {/* DADOS DA AÇÃO (REPETINDO AS INFORMAÇÕES DO PAINEL) */}
-                    <div className="flex-1 min-w-0 space-y-1.5">
+                  {/* LADO ESQUERDO: INFORMAÇÕES COMPLETAS DA AÇÃO */}
+                  <div className="flex-1 min-w-0 space-y-1.5">
                       
                       {/* Linha de Tags / Pilar / Categoria */}
                       <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -303,10 +283,9 @@ export const RoutineBlock: React.FC<RoutineBlockProps> = ({
                       </div>
 
                     </div>
-                  </div>
 
-                  {/* LADO DIREITO: BOTÃO DE CHECK RÁPIDO & VER DETALHES */}
-                  <div className="flex items-center gap-2 self-end lg:self-center shrink-0 pt-2 lg:pt-0">
+                  {/* LADO DIREITO: BOTÃO DE CHECK RÁPIDO & VER DETALHES (ALINHADOS NO TOPO) */}
+                  <div className="flex items-center gap-2 self-start shrink-0 pt-0.5">
                     <button
                       type="button"
                       onClick={(e) => handleToggleCheck(action.id, e)}

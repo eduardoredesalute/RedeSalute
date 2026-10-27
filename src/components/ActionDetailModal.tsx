@@ -10,7 +10,13 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { ProjectAction } from '../data/projectsData';
-import { isActionOverdue } from '../utils/dateUtils';
+import { 
+  isActionOverdue, 
+  dateToIso, 
+  isoToDisplayDate, 
+  getTodayFormatted, 
+  getAddDaysFormatted 
+} from '../utils/dateUtils';
 
 interface ActionDetailModalProps {
   action: ProjectAction | null;
@@ -417,14 +423,14 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={handleSaveDataInicio}
-                      className="text-[11px] text-emerald-600 hover:text-emerald-800 font-bold"
+                      className="text-[11px] text-emerald-600 hover:text-emerald-800 font-bold px-1.5 py-0.5 bg-emerald-50 rounded hover:bg-emerald-100 transition"
                     >
                       Salvar
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsEditingDataInicio(false)}
-                      className="text-[11px] text-slate-400 hover:text-slate-600"
+                      className="text-[11px] text-slate-400 hover:text-slate-600 px-1"
                     >
                       ✕
                     </button>
@@ -433,22 +439,69 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
               </div>
 
               {isEditingDataInicio ? (
-                <div className="mt-1.5">
-                  <input
-                    type="text"
-                    value={tempDataInicio}
-                    onChange={e => setTempDataInicio(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleSaveDataInicio();
-                      if (e.key === 'Escape') setIsEditingDataInicio(false);
-                    }}
-                    autoFocus
-                    placeholder="ex: 23/09 ou 23/set"
-                    className="w-full p-1.5 text-xs font-medium text-slate-800 bg-white border border-blue-400 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                <div className="mt-1.5 space-y-2">
+                  <div>
+                    <label className="block text-[10px] text-slate-500 font-medium mb-0.5">
+                      Selecione no calendário:
+                    </label>
+                    <input
+                      type="date"
+                      value={dateToIso(tempDataInicio)}
+                      onChange={e => {
+                        if (e.target.value) {
+                          setTempDataInicio(isoToDisplayDate(e.target.value));
+                        }
+                      }}
+                      className="w-full p-1.5 text-xs font-bold text-slate-800 bg-white border border-blue-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Botões Rápidos: Semanal, Mensal, Hoje */}
+                  <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setTempDataInicio('Semanal')}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempDataInicio.toLowerCase() === 'semanal'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
+                      }`}
+                    >
+                      Semanal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempDataInicio('Mensal')}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempDataInicio.toLowerCase() === 'mensal'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                          : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                      }`}
+                    >
+                      Mensal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempDataInicio(getTodayFormatted())}
+                      className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md border border-slate-200 transition"
+                    >
+                      Hoje
+                    </button>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 flex items-center justify-between font-medium pt-0.5 border-t border-slate-100">
+                    <span>Selecionado: <strong className="text-blue-700">{tempDataInicio || 'A definir'}</strong></span>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 mt-1.5 text-xs font-medium text-slate-800 tabular-nums">
+                <div 
+                  onClick={() => {
+                    setIsEditingDataInicio(true);
+                    setTempDataInicio(dataInicio);
+                  }}
+                  className="flex items-center gap-1.5 mt-1.5 text-xs font-medium text-slate-800 tabular-nums cursor-pointer hover:text-blue-600 transition"
+                  title="Clique para selecionar data no calendário"
+                >
                   <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="truncate">{dataInicio || 'A definir'}</span>
                 </div>
@@ -479,14 +532,14 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={handleSavePrazo}
-                      className="text-[11px] text-emerald-600 hover:text-emerald-800 font-bold"
+                      className="text-[11px] text-emerald-600 hover:text-emerald-800 font-bold px-1.5 py-0.5 bg-emerald-50 rounded hover:bg-emerald-100 transition"
                     >
                       Salvar
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsEditingPrazo(false)}
-                      className="text-[11px] text-slate-400 hover:text-slate-600"
+                      className="text-[11px] text-slate-400 hover:text-slate-600 px-1"
                     >
                       ✕
                     </button>
@@ -495,22 +548,83 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
               </div>
 
               {isEditingPrazo ? (
-                <div className="mt-1.5">
-                  <input
-                    type="text"
-                    value={tempPrazo}
-                    onChange={e => setTempPrazo(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleSavePrazo();
-                      if (e.key === 'Escape') setIsEditingPrazo(false);
-                    }}
-                    autoFocus
-                    placeholder="ex: 08/10 ou Semanal"
-                    className="w-full p-1.5 text-xs font-bold text-[#113269] bg-white border border-blue-400 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                <div className="mt-1.5 space-y-2">
+                  <div>
+                    <label className="block text-[10px] text-slate-500 font-medium mb-0.5">
+                      Selecione no calendário:
+                    </label>
+                    <input
+                      type="date"
+                      value={dateToIso(tempPrazo)}
+                      onChange={e => {
+                        if (e.target.value) {
+                          setTempPrazo(isoToDisplayDate(e.target.value));
+                        }
+                      }}
+                      className="w-full p-1.5 text-xs font-bold text-[#113269] bg-white border border-blue-400 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs"
+                    />
+                  </div>
+
+                  {/* Botões Rápidos: Semanal, Mensal + atalhos de data */}
+                  <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setTempPrazo('Semanal')}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempPrazo.toLowerCase() === 'semanal'
+                          ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                          : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'
+                      }`}
+                    >
+                      Semanal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempPrazo('Mensal')}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempPrazo.toLowerCase() === 'mensal'
+                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                          : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                      }`}
+                    >
+                      Mensal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempPrazo(getTodayFormatted())}
+                      className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md border border-slate-200 transition"
+                    >
+                      Hoje
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempPrazo(getAddDaysFormatted(7))}
+                      className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md border border-slate-200 transition"
+                    >
+                      +7 dias
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTempPrazo(getAddDaysFormatted(15))}
+                      className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md border border-slate-200 transition"
+                    >
+                      +15 dias
+                    </button>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 flex items-center justify-between font-medium pt-0.5 border-t border-slate-100">
+                    <span>Selecionado: <strong className="text-blue-700">{tempPrazo || 'A definir'}</strong></span>
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-1 mt-1.5 flex-wrap">
+                <div 
+                  onClick={() => {
+                    setIsEditingPrazo(true);
+                    setTempPrazo(prazo);
+                  }}
+                  className="flex items-center justify-between gap-1 mt-1.5 flex-wrap cursor-pointer hover:text-blue-600 transition"
+                  title="Clique para selecionar data no calendário"
+                >
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#113269] tabular-nums">
                     <Clock className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <span className="truncate">{prazo || 'A definir'}</span>
@@ -524,6 +638,7 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                 </div>
               )}
             </div>
+
           </div>
 
           {/* 5. COMO - COM BOTÃO EDITAR */}

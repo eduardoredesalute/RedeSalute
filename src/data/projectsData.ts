@@ -12,6 +12,7 @@ export interface ProjectAction {
   prioridade?: 'Alta' | 'Média' | 'Normal';
   notas?: string;
   unidadeOuParceiro?: string;
+  ordem?: number;
 }
 
 export const INITIAL_PROJECTS: ProjectAction[] = [

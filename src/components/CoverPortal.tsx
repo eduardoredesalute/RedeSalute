@@ -118,10 +118,7 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                         {renderIcon(workspace.iconName, workspace.themeColor)}
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/20">
-                          {workspace.badge || workspace.category}
-                        </span>
-                        <h2 className="text-xl font-extrabold text-white mt-1 tracking-tight font-sans">
+                        <h2 className="text-xl font-extrabold text-white tracking-tight font-sans">
                           {workspace.title}
                         </h2>
                       </div>
@@ -213,9 +210,8 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                   </div>
                 </div>
 
-                {/* Rodapé do Card com Ação Primária & Atalhos */}
-                <div className="p-5 pt-0 space-y-2">
-                  
+                {/* Rodapé do Card com Ação Primária */}
+                <div className="p-5 pt-0">
                   {/* Botão Primário de Acesso */}
                   <button
                     onClick={() => onSelectWorkspace(workspace.id, 'table')}
@@ -224,37 +220,6 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                     <span>Acessar Painel</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
-
-                  {/* Atalhos Rápidos para Visualizações */}
-                  <div className="grid grid-cols-3 gap-1.5 pt-1">
-                    <button
-                      onClick={() => onSelectWorkspace(workspace.id, 'table')}
-                      className="py-1.5 px-2 text-[11px] font-semibold text-slate-600 hover:text-[#113269] bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center justify-center gap-1"
-                      title="Abrir diretamente na Tabela de Ações"
-                    >
-                      <Table className="w-3 h-3 text-slate-500" />
-                      <span>Tabela</span>
-                    </button>
-
-                    <button
-                      onClick={() => onSelectWorkspace(workspace.id, 'pillars')}
-                      className="py-1.5 px-2 text-[11px] font-semibold text-slate-600 hover:text-[#113269] bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center justify-center gap-1"
-                      title="Abrir agrupado por Pilares Estratégicos"
-                    >
-                      <Layers className="w-3 h-3 text-slate-500" />
-                      <span>Pilares</span>
-                    </button>
-
-                    <button
-                      onClick={() => onSelectWorkspace(workspace.id, 'kanban')}
-                      className="py-1.5 px-2 text-[11px] font-semibold text-slate-600 hover:text-[#113269] bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center justify-center gap-1"
-                      title="Abrir no Quadro Kanban"
-                    >
-                      <Kanban className="w-3 h-3 text-slate-500" />
-                      <span>Kanban</span>
-                    </button>
-                  </div>
-
                 </div>
 
               </div>
