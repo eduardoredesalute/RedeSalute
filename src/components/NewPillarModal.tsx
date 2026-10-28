@@ -50,6 +50,22 @@ export const NewPillarModal: React.FC<NewPillarModalProps> = ({
   const [como, setComo] = useState('Definir diretrizes, cronograma de entregas e metas do pilar estratégico.');
   const [status, setStatus] = useState<ProjectAction['status']>('Não iniciado');
 
+  const handleSetYearDataInicio = (targetYear: number) => {
+    const iso = dateToIso(dataInicio) || `${targetYear}-01-01`;
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      setDataInicio(isoToDisplayDate(`${targetYear}-${parts[1]}-${parts[2]}`));
+    }
+  };
+
+  const handleSetYearPrazo = (targetYear: number) => {
+    const iso = dateToIso(prazo) || `${targetYear}-01-15`;
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      setPrazo(isoToDisplayDate(`${targetYear}-${parts[1]}-${parts[2]}`));
+    }
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -297,6 +313,30 @@ export const NewPillarModal: React.FC<NewPillarModalProps> = ({
                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#113269]"
                   />
                 </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSetYearDataInicio(2027)}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                      dataInicio.includes('2027')
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                    }`}
+                  >
+                    2027
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetYearDataInicio(2028)}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                      dataInicio.includes('2028')
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                    }`}
+                  >
+                    2028
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -335,6 +375,30 @@ export const NewPillarModal: React.FC<NewPillarModalProps> = ({
                   onChange={e => setPrazo(isoToDisplayDate(e.target.value))}
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs text-slate-800 outline-none focus:ring-2 focus:ring-[#113269]"
                 />
+                <div className="flex items-center gap-1 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSetYearPrazo(2027)}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                      prazo.includes('2027')
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                    }`}
+                  >
+                    2027
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetYearPrazo(2028)}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded border transition ${
+                      prazo.includes('2028')
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                    }`}
+                  >
+                    2028
+                  </button>
+                </div>
               </div>
             </div>
 

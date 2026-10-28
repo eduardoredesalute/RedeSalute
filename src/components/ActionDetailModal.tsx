@@ -150,6 +150,22 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
     });
   };
 
+  const handleSetYearDataInicio = (targetYear: number) => {
+    const iso = dateToIso(tempDataInicio) || `${targetYear}-01-01`;
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      setTempDataInicio(isoToDisplayDate(`${targetYear}-${parts[1]}-${parts[2]}`));
+    }
+  };
+
+  const handleSetYearPrazo = (targetYear: number) => {
+    const iso = dateToIso(tempPrazo) || `${targetYear}-01-15`;
+    const parts = iso.split('-');
+    if (parts.length === 3) {
+      setTempPrazo(isoToDisplayDate(`${targetYear}-${parts[1]}-${parts[2]}`));
+    }
+  };
+
   // Salvar Como (Detalhamento Operacional)
   const handleSaveComo = () => {
     const trimmed = tempComo.trim();
@@ -487,6 +503,30 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                     >
                       Hoje
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetYearDataInicio(2027)}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempDataInicio.includes('2027')
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                      }`}
+                      title="Definir ano 2027"
+                    >
+                      2027
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetYearDataInicio(2028)}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempDataInicio.includes('2028')
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                      }`}
+                      title="Definir ano 2028"
+                    >
+                      2028
+                    </button>
                   </div>
 
                   <div className="text-[11px] text-slate-500 flex items-center justify-between font-medium pt-0.5 border-t border-slate-100">
@@ -609,6 +649,30 @@ export const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
                       className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md border border-slate-200 transition"
                     >
                       +15 dias
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetYearPrazo(2027)}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempPrazo.includes('2027')
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                      }`}
+                      title="Definir ano 2027"
+                    >
+                      2027
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetYearPrazo(2028)}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition ${
+                        tempPrazo.includes('2028')
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+                      }`}
+                      title="Definir ano 2028"
+                    >
+                      2028
                     </button>
                   </div>
 
