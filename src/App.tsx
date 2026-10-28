@@ -20,6 +20,7 @@ import { KanbanView } from './components/KanbanView';
 import { RoutineBlock } from './components/RoutineBlock';
 import { ActionDetailModal } from './components/ActionDetailModal';
 import { NewActionModal } from './components/NewActionModal';
+import { NewPillarModal } from './components/NewPillarModal';
 import { NewProjectModal } from './components/NewProjectModal';
 import { 
   Building2, 
@@ -132,6 +133,7 @@ export default function App() {
   // Modais
   const [selectedAction, setSelectedAction] = useState<ProjectAction | null>(null);
   const [isNewActionOpen, setIsNewActionOpen] = useState<boolean>(false);
+  const [isNewPillarOpen, setIsNewPillarOpen] = useState<boolean>(false);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState<boolean>(false);
 
   // Lista única de Pilares mantendo a estrutura e ordem de aparição dos pilares
@@ -253,6 +255,11 @@ export default function App() {
     setIsNewActionOpen(false);
   };
 
+  const handleCreatePillar = (actionWithNewPillar: ProjectAction) => {
+    updateActiveWorkspaceActions(prev => insertAndRenumberAction(prev, actionWithNewPillar));
+    setIsNewPillarOpen(false);
+  };
+
   const handleResetFilters = () => {
     setStatusFilter('todos');
     setSearchQuery('');
@@ -311,6 +318,7 @@ export default function App() {
         currentView={currentView}
         onViewChange={setCurrentView}
         onOpenNewModal={() => setIsNewActionOpen(true)}
+        onOpenNewPillarModal={() => setIsNewPillarOpen(true)}
         totalProjects={projects.length}
         onNavigateToCover={() => setCurrentScreen('cover')}
         activeWorkspace={activeWorkspace}
@@ -407,6 +415,17 @@ export default function App() {
           onAddAction={handleAddAction}
           pilares={allPilares.length > 0 ? allPilares : ['AÇÕES OPERACIONAIS']}
           existingActions={projects}
+        />
+      )}
+
+      {isNewPillarOpen && (
+        <NewPillarModal
+          isOpen={isNewPillarOpen}
+          onClose={() => setIsNewPillarOpen(false)}
+          workspaceTitle={activeWorkspace.title}
+          existingPilares={allPilares}
+          existingResponsaveis={allResponsaveis}
+          onCreatePillar={handleCreatePillar}
         />
       )}
 

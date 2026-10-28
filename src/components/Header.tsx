@@ -20,6 +20,7 @@ interface HeaderProps {
   currentView: 'table' | 'pillars' | 'kanban';
   onViewChange: (view: 'table' | 'pillars' | 'kanban') => void;
   onOpenNewModal: () => void;
+  onOpenNewPillarModal?: () => void;
   totalProjects: number;
   onNavigateToCover?: () => void;
   activeWorkspace?: ProjectWorkspace;
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentView,
   onViewChange,
   onOpenNewModal,
+  onOpenNewPillarModal,
   totalProjects,
   onNavigateToCover,
   activeWorkspace,
@@ -205,10 +207,23 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Ações no Header */}
           <div className="flex items-center gap-2 sm:gap-2.5 no-print">
+            {/* Novo Pilar Estratégico */}
+            {onOpenNewPillarModal && (
+              <button
+                onClick={onOpenNewPillarModal}
+                className="px-3.5 py-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/25 hover:border-white/40 rounded-lg shadow-sm transition flex items-center gap-1.5 backdrop-blur-sm active:scale-95 cursor-pointer"
+                title="Criar novo Pilar Estratégico neste painel"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#FFCC00]" />
+                <span className="whitespace-nowrap hidden sm:inline">+ Pilar Estratégico</span>
+                <span className="whitespace-nowrap sm:hidden">+ Pilar</span>
+              </button>
+            )}
+
             {/* Nova Ação */}
             <button
               onClick={onOpenNewModal}
-              className="px-3.5 py-2 text-xs font-bold text-[#113269] bg-[#FFCC00] hover:bg-[#e6b800] rounded-lg shadow-sm transition flex items-center gap-1.5 border border-amber-300"
+              className="px-3.5 py-2 text-xs font-bold text-[#113269] bg-[#FFCC00] hover:bg-[#e6b800] rounded-lg shadow-sm transition flex items-center gap-1.5 border border-amber-300 active:scale-95 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               <span className="whitespace-nowrap">Nova Ação</span>
