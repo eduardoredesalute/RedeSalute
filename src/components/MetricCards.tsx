@@ -1,6 +1,6 @@
-import React from 'react';
-import { CheckCircle2, RotateCw, Clock4, ListFilter } from 'lucide-react';
+import { CheckCircle2, RotateCw, Clock4, ListFilter, AlertTriangle } from 'lucide-react';
 import { ProjectAction } from '../data/projectsData';
+import { isActionOverdue } from '../utils/dateUtils';
 
 interface MetricCardsProps {
   projects: ProjectAction[];
@@ -18,9 +18,18 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
   const completed = projects.filter(p => p.status === 'Finalizado').length;
   const sistemico = projects.filter(p => p.status === 'Sistêmico').length;
   const notStarted = projects.filter(p => p.status === 'Não iniciado').length;
+  const delayed = projects.filter(p => isActionOverdue(p.prazo, p.status)).length;
+
+  const cardCount = 4 + (sistemico > 0 ? 1 : 0) + (delayed > 0 ? 1 : 0);
+  const gridColsClass = 
+    cardCount >= 6 
+      ? 'sm:grid-cols-3 lg:grid-cols-6' 
+      : cardCount === 5 
+      ? 'sm:grid-cols-3 lg:grid-cols-5' 
+      : 'sm:grid-cols-2 lg:grid-cols-4';
 
   return (
-    <div className={`grid grid-cols-2 ${sistemico > 0 ? 'sm:grid-cols-3 lg:grid-cols-5' : 'sm:grid-cols-2 lg:grid-cols-4'} gap-2 sm:gap-2.5`}>
+    <div className={`grid grid-cols-2 ${gridColsClass} gap-2 sm:gap-2.5`}>
         
         {/* Card 1: Total */}
         <div
@@ -196,6 +205,43 @@ export const MetricCards: React.FC<MetricCardsProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Card 6: Atrasadas (exibido caso existam ações vencidas) */}
+        {delayed > 0 && (
+          <div
+            onClick={() => onSelectStatus(activeStatusFilter === 'Atrasadas' ? 'todos' : 'Atrasadas')}
+            className={`cursor-pointer bg-white px-3.5 py-2.5 rounded-lg border transition shadow-xs group ${
+              activeStatusFilter === 'Atrasadas'
+                ? 'border-rose-600 ring-2 ring-rose-400 shadow-sm bg-rose-50/40'
+                : 'border-rose-200/90 hover:border-rose-400 hover:shadow-xs bg-rose-50/20'
+            }`}
+            title="Filtrar ações atrasadas por data de entrega"
+          >
+            <div className="flex items-center justify-between gap-1 mb-1">
+              <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider truncate">
+                Atrasadas
+              </span>
+              <div className="flex items-center gap-1 shrink-0">
+                {activeStatusFilter === 'Atrasadas' && (
+                  <span className="bg-rose-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full">
+                    Ativo
+                  </span>
+                )}
+                <div className="w-5 h-5 rounded-md bg-rose-100 text-rose-700 flex items-center justify-center">
+                  <AlertTriangle className="w-3 h-3 text-rose-600" />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl font-black text-rose-700 tabular-nums">
+                {delayed}
+              </span>
+              <span className="text-[11px] text-rose-600 font-semibold">
+                ({total > 0 ? Math.round((delayed / total) * 100) : 0}%)
+              </span>
+            </div>
+          </div>
+        )}
 
       </div>
   );

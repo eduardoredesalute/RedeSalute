@@ -15,9 +15,11 @@ import {
   Kanban,
   Users,
   TrendingUp,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from 'lucide-react';
 import { ProjectWorkspace } from '../data/projectsData';
+import { isActionOverdue } from '../utils/dateUtils';
 
 interface CoverPortalProps {
   workspaces: ProjectWorkspace[];
@@ -98,7 +100,7 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
             const inProgress = workspace.actions.filter(a => a.status === 'Em andamento').length;
             const sistemico = workspace.actions.filter(a => a.status === 'Sistêmico').length;
             const notStarted = workspace.actions.filter(a => a.status === 'Não iniciado').length;
-            const pct = total > 0 ? Math.round(((completed + sistemico) / total) * 100) : 0;
+            const delayed = workspace.actions.filter(a => isActionOverdue(a.prazo, a.status)).length;
             const pillarsCount = new Set(workspace.actions.map(a => a.pilar)).size;
             const responsaveis = Array.from(new Set(workspace.actions.map(a => a.responsavel))).slice(0, 4);
 
@@ -126,37 +128,9 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                   </div>
 
                   {/* Corpo do Card */}
-                  <div className="p-5 space-y-4">
-                    
-                    {/* Subtítulo & Descrição */}
-                    <div className="space-y-1">
-                      <h3 className="text-xs font-semibold text-[#113269] uppercase tracking-wider font-sans">
-                        {workspace.subtitle}
-                      </h3>
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed font-normal">
-                        {workspace.description}
-                      </p>
-                    </div>
-
-                    {/* Barra de Progresso do Projeto */}
-                    <div className="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-slate-700">Taxa de Conclusão</span>
-                        <span className="font-extrabold text-[#113269] tabular-nums">{pct}%</span>
-                      </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: pct === 100 ? '#10b981' : (workspace.themeColor || '#113269')
-                          }}
-                        />
-                      </div>
-                    </div>
-
+                  <div className="p-5 space-y-3.5">
                     {/* Métricas do Painel (Unboxed text) */}
-                    <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                    <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 bg-slate-50 rounded-lg border border-slate-100">
                         <div className="text-lg font-bold text-slate-800 tabular-nums">
                           {total}
@@ -186,8 +160,8 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                     </div>
 
                     {/* Resumo de Status e Equipe */}
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                      <div className="flex items-center gap-1 font-medium">
+                    <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-y-2 gap-x-2 text-[11px] text-slate-500">
+                      <div className="flex items-center flex-wrap gap-1 font-medium">
                         <span className="text-emerald-700 font-bold">{completed} conc</span>
                         {sistemico > 0 && (
                           <>
@@ -199,11 +173,25 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
                         <span className="text-blue-700 font-bold">{inProgress} and</span>
                         <span>·</span>
                         <span className="text-slate-600 font-bold">{notStarted} pend</span>
+                        <span>·</span>
+                        <span 
+                          className={`font-bold inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] tracking-tight transition-colors ${
+                            delayed > 0 
+                              ? 'bg-rose-100 text-rose-800 border border-rose-300 font-extrabold shadow-2xs' 
+                              : 'text-slate-400 font-medium'
+                          }`}
+                          title={delayed > 0 ? `${delayed} ${delayed === 1 ? 'ação atrasada' : 'ações atrasadas'} conforme prazo limite` : 'Nenhuma ação atrasada'}
+                        >
+                          {delayed > 0 && <AlertTriangle className="w-2.5 h-2.5 text-rose-600 shrink-0" />}
+                          <span>{delayed} {delayed === 1 ? 'atrasada' : 'atrasadas'}</span>
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600">
+                      <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 shrink-0">
                         <Users className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{responsaveis.join(', ')}</span>
+                        <span className="max-w-[150px] truncate" title={responsaveis.join(', ')}>
+                          {responsaveis.join(', ')}
+                        </span>
                       </div>
                     </div>
 
@@ -229,7 +217,7 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
           {/* CARD DE ADIÇÃO: "+ CRIAR NOVO PAINEL" */}
           <div
             onClick={onOpenNewProjectModal}
-            className="bg-white/80 hover:bg-white rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#113269] p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group hover:shadow-md min-h-[380px]"
+            className="bg-white/80 hover:bg-white rounded-2xl border-2 border-dashed border-slate-300 hover:border-[#113269] p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group hover:shadow-md min-h-[250px]"
           >
             <div className="w-14 h-14 rounded-2xl bg-blue-50 group-hover:bg-[#113269] text-blue-600 group-hover:text-[#FFCC00] flex items-center justify-center transition-all duration-200 shadow-xs mb-4">
               <Plus className="w-7 h-7" />

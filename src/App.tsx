@@ -33,6 +33,7 @@ import {
   insertAndRenumberAction, 
   renumberAndOrganizeActions 
 } from './utils/actionUtils';
+import { isActionOverdue } from './utils/dateUtils';
 
 const WORKSPACES_STORAGE_KEY = 'rede_salute_workspaces_v5';
 const LAST_WORKSPACE_KEY = 'rede_salute_last_workspace_id';
@@ -157,7 +158,11 @@ export default function App() {
   const filteredProjects = useMemo(() => {
     return projects.filter(item => {
       const matchesStatus =
-        statusFilter === 'todos' || item.status === statusFilter;
+        statusFilter === 'todos'
+          ? true
+          : statusFilter === 'Atrasadas'
+          ? isActionOverdue(item.prazo, item.status)
+          : item.status === statusFilter;
       const matchesPilar =
         selectedPilar === 'todos' || item.pilar === selectedPilar;
       const matchesResp =
