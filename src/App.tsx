@@ -35,7 +35,7 @@ import {
 } from './utils/actionUtils';
 import { isActionOverdue } from './utils/dateUtils';
 
-const WORKSPACES_STORAGE_KEY = 'rede_salute_workspaces_v5';
+const WORKSPACES_STORAGE_KEY = 'rede_salute_workspaces_v6';
 const LAST_WORKSPACE_KEY = 'rede_salute_last_workspace_id';
 const SCREEN_STORAGE_KEY = 'rede_salute_current_screen';
 
@@ -49,12 +49,13 @@ export default function App() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((ws: ProjectWorkspace) => ({
             ...ws,
+            title: ws.id === 'projetos-estrategicos' && ws.title === 'Projetos Estratégicos' ? 'Captação e Disponibilidade de Agendas' : ws.title,
             actions: renumberAndOrganizeActions(ws.actions || [])
           }));
         }
       }
       // Migração de versões anteriores: carregar INITIAL_WORKSPACES atualizados e preservar painéis customizados
-      const legacy = localStorage.getItem('rede_salute_workspaces_v4') || localStorage.getItem('rede_salute_workspaces_v3') || localStorage.getItem('rede_salute_workspaces_v2');
+      const legacy = localStorage.getItem('rede_salute_workspaces_v5') || localStorage.getItem('rede_salute_workspaces_v4') || localStorage.getItem('rede_salute_workspaces_v3') || localStorage.getItem('rede_salute_workspaces_v2');
       if (legacy) {
         const parsedLegacy = JSON.parse(legacy);
         if (Array.isArray(parsedLegacy) && parsedLegacy.length > 0) {
@@ -63,6 +64,7 @@ export default function App() {
           );
           return [...INITIAL_WORKSPACES, ...customWorkspaces].map((ws: ProjectWorkspace) => ({
             ...ws,
+            title: ws.id === 'projetos-estrategicos' && ws.title === 'Projetos Estratégicos' ? 'Captação e Disponibilidade de Agendas' : ws.title,
             actions: renumberAndOrganizeActions(ws.actions || [])
           }));
         }

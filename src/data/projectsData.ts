@@ -1451,7 +1451,7 @@ export const INITIAL_EXAMES_PROJECTS: ProjectAction[] = [
 export const INITIAL_WORKSPACES: ProjectWorkspace[] = [
   {
     id: 'projetos-estrategicos',
-    title: 'Projetos Estratégicos',
+    title: 'Captação e Disponibilidade de Agendas',
     subtitle: 'Plano Estratégico de Captação & Expansão Médica',
     category: 'Expansão & Corpo Clínico',
     description: 'Monitoramento de captação de médicos, parcerias com universidades, COREME, conselhos de classe, concorrência e abertura de unidades.',
