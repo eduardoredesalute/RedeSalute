@@ -31,9 +31,17 @@ import {
 } from 'lucide-react';
 import { 
   insertAndRenumberAction, 
-  renumberAndOrganizeActions 
+  renumberAndOrganizeActions,
+  reorderPillars,
+  reorderActionItem
 } from './utils/actionUtils';
 import { isActionOverdue } from './utils/dateUtils';
+import { 
+  ensureWorkspacesSeeded, 
+  subscribeToWorkspaces, 
+  syncWorkspaceActions, 
+  syncSaveWorkspace 
+} from './services/firebaseService';
 
 const WORKSPACES_STORAGE_KEY = 'rede_salute_workspaces_v6';
 const LAST_WORKSPACE_KEY = 'rede_salute_last_workspace_id';
@@ -78,7 +86,7 @@ export default function App() {
     }));
   });
 
-  // Salvar workspaces no localStorage
+  // Salvar workspaces no localStorage (como fallback e cache rápido)
   useEffect(() => {
     try {
       localStorage.setItem(WORKSPACES_STORAGE_KEY, JSON.stringify(workspaces));
@@ -86,6 +94,49 @@ export default function App() {
       console.error('Erro ao salvar workspaces no localStorage:', e);
     }
   }, [workspaces]);
+
+  // Estado da conexão em nuvem (Firebase Firestore)
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [isCloudSyncing, setIsCloudSyncing] = useState<boolean>(true);
+
+  // Sincronização em tempo real e migração transparente com Firebase Firestore
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Assegura que se a nuvem estiver vazia, os dados atuais migrem para o Firestore
+    ensureWorkspacesSeeded(workspaces)
+      .then(() => {
+        if (isMounted) setIsCloudSyncing(false);
+      })
+      .catch((err) => {
+        console.warn('Verificação de seeding na nuvem:', err);
+        if (isMounted) setIsCloudSyncing(false);
+      });
+
+    // 2. Inscreve o listener reativo em tempo real para todos os usuários
+    const unsubscribe = subscribeToWorkspaces(
+      (remoteWorkspaces) => {
+        if (!isMounted) return;
+        if (remoteWorkspaces && remoteWorkspaces.length > 0) {
+          setWorkspaces(remoteWorkspaces);
+          setIsOnline(true);
+          setIsCloudSyncing(false);
+        }
+      },
+      (err) => {
+        console.warn('Conexão Firebase:', err);
+        if (isMounted) {
+          setIsOnline(false);
+          setIsCloudSyncing(false);
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // 2. Tela atual: 'cover' (Capa / Portal de Projetos) ou 'project' (Painel do Projeto)
   const [currentScreen, setCurrentScreen] = useState<'cover' | 'project'>(() => {
@@ -215,10 +266,15 @@ export default function App() {
     setWorkspaces(prevWorkspaces =>
       prevWorkspaces.map(ws => {
         if (ws.id === activeWorkspaceId) {
+          const newActions = updater(ws.actions);
+          // Sincroniza imediatamente com o Firebase Firestore para toda a equipe
+          syncWorkspaceActions(ws.id, newActions).catch(err => {
+            console.error('Erro ao sincronizar com Firestore:', err);
+          });
           return {
             ...ws,
-            actions: updater(ws.actions),
-            updatedAt: 'Outubro 2026'
+            actions: newActions,
+            updatedAt: 'Novembro 2026'
           };
         }
         return ws;
@@ -267,6 +323,14 @@ export default function App() {
     setIsNewPillarOpen(false);
   };
 
+  const handleReorderActions = (sourceId: string, targetId: string, position: 'before' | 'after') => {
+    updateActiveWorkspaceActions(prev => reorderActionItem(prev, sourceId, targetId, position));
+  };
+
+  const handleReorderPillars = (sourcePilar: string, targetPilar: string, position: 'before' | 'after') => {
+    updateActiveWorkspaceActions(prev => reorderPillars(prev, sourcePilar, targetPilar, position));
+  };
+
   const handleResetFilters = () => {
     setStatusFilter('todos');
     setSearchQuery('');
@@ -287,6 +351,9 @@ export default function App() {
 
   // Criar novo workspace / painel
   const handleCreateWorkspace = (newWorkspace: ProjectWorkspace) => {
+    syncSaveWorkspace(newWorkspace).catch(err => {
+      console.error('Erro ao salvar workspace na nuvem:', err);
+    });
     setWorkspaces(prev => [...prev, newWorkspace]);
     setActiveWorkspaceId(newWorkspace.id);
     handleResetFilters();
@@ -303,6 +370,8 @@ export default function App() {
           onSelectWorkspace={handleSelectWorkspace}
           onOpenNewProjectModal={() => setIsNewProjectOpen(true)}
           lastActiveWorkspaceId={activeWorkspaceId}
+          isOnline={isOnline}
+          isSyncing={isCloudSyncing}
         />
 
         {isNewProjectOpen && (
@@ -332,6 +401,8 @@ export default function App() {
         allWorkspaces={workspaces}
         onSelectWorkspace={handleSelectWorkspace}
         onOpenNewProjectModal={() => setIsNewProjectOpen(true)}
+        isOnline={isOnline}
+        isSyncing={isCloudSyncing}
       />
 
       {/* 2. CONTEÚDO PRINCIPAL (OCUPAÇÃO TOTAL DA TELA) */}
@@ -378,6 +449,8 @@ export default function App() {
             onSelectAction={setSelectedAction}
             onQuickStatusChange={handleQuickStatusChange}
             onResetFilters={handleResetFilters}
+            onReorderActions={handleReorderActions}
+            onReorderPillars={handleReorderPillars}
           />
         )}
 
@@ -385,6 +458,8 @@ export default function App() {
           <PillarsView
             projects={filteredProjects}
             onSelectAction={setSelectedAction}
+            onReorderActions={handleReorderActions}
+            onReorderPillars={handleReorderPillars}
           />
         )}
 

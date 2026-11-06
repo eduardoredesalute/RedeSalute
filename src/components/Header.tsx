@@ -27,6 +27,8 @@ interface HeaderProps {
   allWorkspaces?: ProjectWorkspace[];
   onSelectWorkspace?: (id: string) => void;
   onOpenNewProjectModal?: () => void;
+  isOnline?: boolean;
+  isSyncing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,7 +41,9 @@ export const Header: React.FC<HeaderProps> = ({
   activeWorkspace,
   allWorkspaces = [],
   onSelectWorkspace,
-  onOpenNewProjectModal
+  onOpenNewProjectModal,
+  isOnline = true,
+  isSyncing = false
 }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -207,6 +211,21 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Ações no Header */}
           <div className="flex items-center gap-2 sm:gap-2.5 no-print">
+            {/* Indicador de Status Online / Nuvem */}
+            <div 
+              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition ${
+                isSyncing 
+                  ? 'bg-amber-400/20 text-amber-200 border-amber-400/40' 
+                  : isOnline 
+                  ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30' 
+                  : 'bg-rose-500/20 text-rose-200 border-rose-400/30'
+              }`}
+              title={isSyncing ? 'Sincronizando com a nuvem...' : isOnline ? 'Online: alterações sincronizadas em tempo real para toda a equipe' : 'Modo offline'}
+            >
+              <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+              <span className="truncate max-w-[140px]">{isSyncing ? 'Sincronizando...' : isOnline ? 'Nuvem Conectada' : 'Offline'}</span>
+            </div>
+
             {/* Novo Pilar Estratégico */}
             {onOpenNewPillarModal && (
               <button

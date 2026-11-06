@@ -26,13 +26,17 @@ interface CoverPortalProps {
   onSelectWorkspace: (workspaceId: string, view?: 'table' | 'pillars' | 'kanban') => void;
   onOpenNewProjectModal: () => void;
   lastActiveWorkspaceId?: string;
+  isOnline?: boolean;
+  isSyncing?: boolean;
 }
 
 export const CoverPortal: React.FC<CoverPortalProps> = ({
   workspaces,
   onSelectWorkspace,
   onOpenNewProjectModal,
-  lastActiveWorkspaceId
+  lastActiveWorkspaceId,
+  isOnline = true,
+  isSyncing = false
 }) => {
   // Helper para renderizar o ícone do projeto
   const renderIcon = (iconName: string, themeColor: string) => {
@@ -76,6 +80,21 @@ export const CoverPortal: React.FC<CoverPortalProps> = ({
 
             {/* Ações Rápidas no Topo */}
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Indicador de Status Online / Nuvem */}
+              <div 
+                className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                  isSyncing 
+                    ? 'bg-amber-400/20 text-amber-200 border-amber-400/40' 
+                    : isOnline 
+                    ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30' 
+                    : 'bg-rose-500/20 text-rose-200 border-rose-400/30'
+                }`}
+                title={isSyncing ? 'Sincronizando com a nuvem...' : isOnline ? 'Online: alterações sincronizadas em tempo real para toda a equipe' : 'Modo offline'}
+              >
+                <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
+                <span className="truncate">{isSyncing ? 'Sincronizando...' : isOnline ? 'Nuvem Conectada' : 'Offline'}</span>
+              </div>
+
               <button
                 onClick={onOpenNewProjectModal}
                 className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-bold bg-[#FFCC00] text-[#113269] hover:bg-amber-400 rounded-lg transition shadow-xs flex items-center gap-1.5 border border-amber-300"

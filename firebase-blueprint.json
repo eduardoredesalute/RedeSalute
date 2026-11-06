@@ -1,0 +1,30 @@
+{
+  "entities": {
+    "Workspace": {
+      "title": "Workspace",
+      "description": "Painel de projetos estratégicos e ações da Rede Salute",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "badge": { "type": "string" },
+        "iconName": { "type": "string" },
+        "themeColor": { "type": "string" },
+        "updatedAt": { "type": "string" },
+        "actions": {
+          "type": "array"
+        }
+      },
+      "required": ["id", "title", "actions"]
+    }
+  },
+  "firestore": {
+    "/workspaces/{workspaceId}": {
+      "schema": "Workspace",
+      "description": "Armazena os painéis e suas respectivas ações sincronizadas em tempo real"
+    }
+  }
+}

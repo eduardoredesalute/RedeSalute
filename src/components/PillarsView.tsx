@@ -1,26 +1,47 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Layers, CheckCircle2, RotateCw, Clock, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp, Layers, CheckCircle2, RotateCw, Clock, Eye, GripVertical } from 'lucide-react';
 import { ProjectAction } from '../data/projectsData';
 
 interface PillarsViewProps {
   projects: ProjectAction[];
   onSelectAction: (action: ProjectAction) => void;
+  onReorderActions?: (sourceId: string, targetId: string, position: 'before' | 'after') => void;
+  onReorderPillars?: (sourcePillar: string, targetPillar: string, position: 'before' | 'after') => void;
 }
 
 export const PillarsView: React.FC<PillarsViewProps> = ({
   projects,
-  onSelectAction
+  onSelectAction,
+  onReorderActions,
+  onReorderPillars
 }) => {
-  // Group projects by pilar
-  const pilarGroups = projects.reduce<Record<string, ProjectAction[]>>((acc, curr) => {
-    if (!acc[curr.pilar]) {
-      acc[curr.pilar] = [];
-    }
-    acc[curr.pilar].push(curr);
-    return acc;
-  }, {});
+  // Estados para Drag & Drop
+  const [draggedPillar, setDraggedPillar] = useState<string | null>(null);
+  const [dragOverPillar, setDragOverPillar] = useState<{ pillar: string; position: 'before' | 'after' } | null>(null);
+  const [draggedActionId, setDraggedActionId] = useState<string | null>(null);
+  const [dragOverAction, setDragOverAction] = useState<{ id: string; position: 'before' | 'after' } | null>(null);
 
-  const pilarKeys = Object.keys(pilarGroups);
+  // Group projects by pilar preservando a ordem exata de aparição
+  const pilarKeys = useMemo(() => {
+    const seen = new Set<string>();
+    const order: string[] = [];
+    projects.forEach(p => {
+      if (!seen.has(p.pilar)) {
+        seen.add(p.pilar);
+        order.push(p.pilar);
+      }
+    });
+    return order;
+  }, [projects]);
+
+  const pilarGroups = useMemo(() => {
+    const map: Record<string, ProjectAction[]> = {};
+    projects.forEach(p => {
+      if (!map[p.pilar]) map[p.pilar] = [];
+      map[p.pilar].push(p);
+    });
+    return map;
+  }, [projects]);
 
   // Expanded states (default: first 4 open, or all open)
   const [expandedPilares, setExpandedPilares] = useState<Record<string, boolean>>(() => {
@@ -70,10 +91,10 @@ export const PillarsView: React.FC<PillarsViewProps> = ({
         </div>
       </div>
 
-      {/* Grid de Pilares */}
+      {/* Grid de Pilares com Suporte a Drag and Drop */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {pilarKeys.map(pilar => {
-          const items = pilarGroups[pilar];
+          const items = pilarGroups[pilar] || [];
           const isExpanded = !!expandedPilares[pilar];
           const total = items.length;
           const completed = items.filter(i => i.status === 'Finalizado').length;
@@ -81,26 +102,76 @@ export const PillarsView: React.FC<PillarsViewProps> = ({
           const sistemico = items.filter(i => i.status === 'Sistêmico').length;
           const notStarted = items.filter(i => i.status === 'Não iniciado').length;
           
-          const avgProgress = Math.round(
+          const avgProgress = total > 0 ? Math.round(
             items.reduce((acc, curr) => acc + (curr.progresso || 0), 0) / total
-          );
+          ) : 0;
 
           const categoria = items[0]?.pilarCategoria || 'Estratégico';
 
           return (
             <div
               key={pilar}
-              className="bg-white rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition overflow-hidden"
+              onDragOver={(e) => {
+                if (!draggedPillar || draggedPillar === pilar) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = e.currentTarget.getBoundingClientRect();
+                const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                setDragOverPillar({ pillar: pilar, position });
+              }}
+              onDragLeave={() => {
+                if (dragOverPillar?.pillar === pilar) {
+                  setDragOverPillar(null);
+                }
+              }}
+              onDrop={(e) => {
+                if (!draggedPillar || draggedPillar === pilar) return;
+                e.preventDefault();
+                const pos = dragOverPillar?.position || 'before';
+                onReorderPillars?.(draggedPillar, pilar, pos);
+                setDraggedPillar(null);
+                setDragOverPillar(null);
+              }}
+              className={`bg-white rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all overflow-hidden ${
+                draggedPillar === pilar ? 'opacity-35 ring-2 ring-slate-400 bg-slate-100' : ''
+              } ${
+                dragOverPillar?.pillar === pilar
+                  ? dragOverPillar.position === 'before'
+                    ? 'border-t-4 border-t-blue-600 bg-blue-50/50'
+                    : 'border-b-4 border-b-blue-600 bg-blue-50/50'
+                  : ''
+              }`}
             >
               {/* Header do Pilar */}
               <div
                 onClick={() => togglePilar(pilar)}
                 className="p-4 cursor-pointer hover:bg-slate-50/80 transition flex items-start justify-between gap-3 select-none"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2.5">
+                  {/* Alça de Arraste do Pilar */}
+                  <div
+                    draggable
+                    onClick={(e) => e.stopPropagation()}
+                    onDragStart={(e) => {
+                      e.stopPropagation();
+                      setDraggedPillar(pilar);
+                      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'pillar', pillar: pilar }));
+                      e.dataTransfer.effectAllowed = 'move';
+                    }}
+                    onDragEnd={() => {
+                      setDraggedPillar(null);
+                      setDragOverPillar(null);
+                    }}
+                    className="p-1 rounded text-slate-400 hover:text-[#113269] hover:bg-slate-200 cursor-grab active:cursor-grabbing transition mt-0.5"
+                    title="Clique e arraste para reordenar este Pilar"
+                  >
+                    <GripVertical className="w-4 h-4 text-slate-500" />
+                  </div>
+
                   <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm shrink-0 mt-0.5">
                     <Layers className="w-4 h-4" />
                   </div>
+
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
                       {categoria}
@@ -148,7 +219,7 @@ export const PillarsView: React.FC<PillarsViewProps> = ({
                 </div>
               </div>
 
-              {/* Lista de Ações do Pilar (Expandida) */}
+              {/* Lista de Ações do Pilar (Expandida com Suporte a Drag & Drop) */}
               {isExpanded && (
                 <div className="border-t border-slate-100 divide-y divide-slate-100 bg-slate-50/40">
                   {items.map(action => {
@@ -166,9 +237,57 @@ export const PillarsView: React.FC<PillarsViewProps> = ({
                     return (
                       <div
                         key={action.id}
-                        className="p-3.5 flex items-center justify-between gap-3 hover:bg-white transition"
+                        onDragOver={(e) => {
+                          if (!draggedActionId || draggedActionId === action.id) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                          setDragOverAction({ id: action.id, position });
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverAction?.id === action.id) {
+                            setDragOverAction(null);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          if (!draggedActionId || draggedActionId === action.id) return;
+                          e.preventDefault();
+                          const pos = dragOverAction?.position || 'before';
+                          onReorderActions?.(draggedActionId, action.id, pos);
+                          setDraggedActionId(null);
+                          setDragOverAction(null);
+                        }}
+                        className={`p-3.5 flex items-center justify-between gap-3 hover:bg-white transition ${
+                          draggedActionId === action.id ? 'opacity-30 bg-slate-200' : ''
+                        } ${
+                          dragOverAction?.id === action.id
+                            ? dragOverAction.position === 'before'
+                              ? 'border-t-2 border-t-blue-600 bg-blue-50/80'
+                              : 'border-b-2 border-b-blue-600 bg-blue-50/80'
+                            : ''
+                        }`}
                       >
-                        <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="flex items-start gap-2 min-w-0">
+                          {/* Alça de Arraste da Ação */}
+                          <div
+                            draggable
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              setDraggedActionId(action.id);
+                              e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'action', actionId: action.id }));
+                              e.dataTransfer.effectAllowed = 'move';
+                            }}
+                            onDragEnd={() => {
+                              setDraggedActionId(null);
+                              setDragOverAction(null);
+                            }}
+                            className="p-1 rounded text-slate-400 hover:text-[#113269] hover:bg-blue-100/70 cursor-grab active:cursor-grabbing transition shrink-0"
+                            title="Clique e arraste para reordenar esta ação"
+                          >
+                            <GripVertical className="w-3.5 h-3.5 text-slate-400 hover:text-blue-600" />
+                          </div>
+
                           <div className="mt-0.5">{statusIcon}</div>
                           <div className="min-w-0">
                             <p 
@@ -176,6 +295,7 @@ export const PillarsView: React.FC<PillarsViewProps> = ({
                               className="text-xs font-semibold text-slate-800 hover:text-[#113269] cursor-pointer truncate font-sans"
                               title={action.acao}
                             >
+                              <span className="font-extrabold text-[#113269] mr-1.5">#{action.ordem}</span>
                               {action.acao}
                             </p>
                             <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5 font-sans">

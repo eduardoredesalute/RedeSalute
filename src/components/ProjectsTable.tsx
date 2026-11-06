@@ -1,11 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   Eye, 
   CheckCircle2, 
   RotateCw, 
   Clock, 
   FilterX,
-  AlertTriangle
+  AlertTriangle,
+  GripVertical
 } from 'lucide-react';
 import { ProjectAction } from '../data/projectsData';
 import { isActionOverdue } from '../utils/dateUtils';
@@ -15,6 +16,8 @@ interface ProjectsTableProps {
   onSelectAction: (action: ProjectAction) => void;
   onQuickStatusChange: (id: string, newStatus: 'Finalizado' | 'Em andamento' | 'Não iniciado' | 'Sistêmico') => void;
   onResetFilters: () => void;
+  onReorderActions?: (sourceId: string, targetId: string, position: 'before' | 'after') => void;
+  onReorderPillars?: (sourcePillar: string, targetPillar: string, position: 'before' | 'after') => void;
 }
 
 interface PillarGroup {
@@ -27,8 +30,15 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
   projects,
   onSelectAction,
   onQuickStatusChange,
-  onResetFilters
+  onResetFilters,
+  onReorderActions,
+  onReorderPillars
 }) => {
+  // Estados para Drag and Drop de Pilares e Ações
+  const [draggedPillar, setDraggedPillar] = useState<string | null>(null);
+  const [dragOverPillar, setDragOverPillar] = useState<{ pillar: string; position: 'before' | 'after' } | null>(null);
+  const [draggedActionId, setDraggedActionId] = useState<string | null>(null);
+  const [dragOverAction, setDragOverAction] = useState<{ id: string; position: 'before' | 'after' } | null>(null);
   // Agrupamento unificado por Pilar Estratégico preservando a estrutura de ordem dos pilares e ações
   const pillarGroups = useMemo<PillarGroup[]>(() => {
     const groups: { [key: string]: PillarGroup } = {};
@@ -95,6 +105,16 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
 
   return (
     <div className="w-full bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
+      {/* Barra Informativa de Reordenação */}
+      <div className="flex items-center justify-between px-4 py-2 bg-slate-50/90 border-b border-slate-200/90 text-[11px] text-slate-600 font-sans no-print">
+        <div className="flex items-center gap-1.5 font-medium">
+          <GripVertical className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <span>
+            <strong className="text-slate-800">Reordenação Ativa:</strong> Clique e arraste o ícone <GripVertical className="w-3 h-3 inline text-slate-500" /> nos <strong>Pilares</strong> ou no <strong># da Ação</strong> para reorganizar livremente. A numeração (#) é recalculada automaticamente.
+          </span>
+        </div>
+      </div>
+
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left text-sm border-collapse">
           <thead>
@@ -102,7 +122,7 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
               <th className="py-3.5 px-4 w-[24%] min-w-[240px] border-r border-slate-200 font-sans">
                 Pilar Estratégico
               </th>
-              <th className="py-3.5 px-3 w-12 text-center text-[#113269] font-sans">#</th>
+              <th className="py-3.5 px-3 w-14 text-center text-[#113269] font-sans">#</th>
               <th className="py-3.5 px-4 min-w-[280px] font-sans">Ação</th>
               <th className="py-3.5 px-4 w-[130px] whitespace-nowrap font-sans">Responsável</th>
               <th className="py-3.5 px-4 w-[95px] text-center whitespace-nowrap font-sans">Início</th>
@@ -168,6 +188,27 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
                 return (
                   <tr
                     key={p.id}
+                    onDragOver={(e) => {
+                      if (!draggedActionId || draggedActionId === p.id) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                      setDragOverAction({ id: p.id, position });
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverAction?.id === p.id) {
+                        setDragOverAction(null);
+                      }
+                    }}
+                    onDrop={(e) => {
+                      if (!draggedActionId || draggedActionId === p.id) return;
+                      e.preventDefault();
+                      const pos = dragOverAction?.position || 'before';
+                      onReorderActions?.(draggedActionId, p.id, pos);
+                      setDraggedActionId(null);
+                      setDragOverAction(null);
+                    }}
                     className={`transition-colors group ${
                       isOverdue 
                         ? 'bg-rose-50/25 hover:bg-rose-50/50' 
@@ -176,18 +217,76 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
                       isLastInPillar
                         ? 'border-b-2 border-slate-200/90'
                         : 'border-b border-slate-100'
+                    } ${
+                      draggedActionId === p.id ? 'opacity-35 bg-slate-100' : ''
+                    } ${
+                      dragOverAction?.id === p.id
+                        ? dragOverAction.position === 'before'
+                          ? 'border-t-2 border-t-blue-600 bg-blue-50/70'
+                          : 'border-b-2 border-b-blue-600 bg-blue-50/70'
+                        : ''
                     }`}
                   >
-                    {/* COLUNA 1 UNIFICADA: PILAR ESTRATÉGICO */}
+                    {/* COLUNA 1 UNIFICADA: PILAR ESTRATÉGICO COM REORDENAÇÃO */}
                     {isFirstInPillar && (
                       <td
                         rowSpan={rowCount}
-                        className="py-4 px-4 align-top bg-slate-50/80 border-r border-slate-200 text-slate-800 transition-colors"
+                        onDragOver={(e) => {
+                          if (!draggedPillar || draggedPillar === group.pilar) return;
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const position = (e.clientY - rect.top) < rect.height / 2 ? 'before' : 'after';
+                          setDragOverPillar({ pillar: group.pilar, position });
+                        }}
+                        onDragLeave={() => {
+                          if (dragOverPillar?.pillar === group.pilar) {
+                            setDragOverPillar(null);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          if (!draggedPillar || draggedPillar === group.pilar) return;
+                          e.preventDefault();
+                          const pos = dragOverPillar?.position || 'before';
+                          onReorderPillars?.(draggedPillar, group.pilar, pos);
+                          setDraggedPillar(null);
+                          setDragOverPillar(null);
+                        }}
+                        className={`py-4 px-4 align-top bg-slate-50/80 border-r border-slate-200 text-slate-800 transition-all ${
+                          dragOverPillar?.pillar === group.pilar
+                            ? dragOverPillar.position === 'before'
+                              ? 'border-t-4 border-t-blue-600 bg-blue-100/60 shadow-inner'
+                              : 'border-b-4 border-b-blue-600 bg-blue-100/60 shadow-inner'
+                            : ''
+                        } ${
+                          draggedPillar === group.pilar ? 'opacity-35 bg-slate-200' : ''
+                        }`}
                       >
-                        <div className="sticky top-24 space-y-1.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#113269] bg-blue-100/70 px-2 py-0.5 rounded border border-blue-200 inline-block font-sans">
-                            {group.pilarCategoria}
-                          </span>
+                        <div className="sticky top-24 space-y-2">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#113269] bg-blue-100/70 px-2 py-0.5 rounded border border-blue-200 inline-block font-sans">
+                              {group.pilarCategoria}
+                            </span>
+                            <div
+                              draggable
+                              onDragStart={(e) => {
+                                e.stopPropagation();
+                                setDraggedPillar(group.pilar);
+                                e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'pillar', pillar: group.pilar }));
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
+                              onDragEnd={() => {
+                                setDraggedPillar(null);
+                                setDragOverPillar(null);
+                              }}
+                              className="p-1 rounded text-slate-400 hover:text-[#113269] hover:bg-slate-200/90 cursor-grab active:cursor-grabbing transition-all flex items-center gap-0.5"
+                              title="Clique e arraste para reordenar este Pilar para cima ou para baixo"
+                            >
+                              <GripVertical className="w-4 h-4 text-slate-500" />
+                              <span className="text-[10px] font-bold text-slate-500 hidden xl:inline">Mover</span>
+                            </div>
+                          </div>
+
                           <h4 
                             className="text-xs font-bold text-[#113269] leading-snug break-words font-sans"
                             title={group.pilar}
@@ -200,13 +299,36 @@ export const ProjectsTable: React.FC<ProjectsTableProps> = ({
                             </span>
                             <span>{rowCount === 1 ? 'ação vinculada' : 'ações vinculadas'}</span>
                           </div>
+
+                          {dragOverPillar?.pillar === group.pilar && (
+                            <div className="mt-2 py-1 px-2 bg-blue-600 text-white text-[10px] font-bold rounded text-center shadow-xs animate-pulse">
+                              Soltar pilar {dragOverPillar.position === 'before' ? 'acima' : 'abaixo'}
+                            </div>
+                          )}
                         </div>
                       </td>
                     )}
 
-                    {/* # Index da Ação */}
-                    <td className="py-3.5 px-3 text-center text-xs font-bold text-slate-500 tabular-nums font-sans">
-                      {itemObj.action.ordem || itemObj.globalIndex}
+                    {/* # Index da Ação com Alça de Arraste */}
+                    <td className="py-3.5 px-2 text-center text-xs font-bold text-slate-500 tabular-nums font-sans">
+                      <div
+                        draggable
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          setDraggedActionId(p.id);
+                          e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'action', actionId: p.id }));
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragEnd={() => {
+                          setDraggedActionId(null);
+                          setDragOverAction(null);
+                        }}
+                        className="inline-flex items-center justify-center gap-0.5 px-1.5 py-1 rounded hover:bg-blue-100/70 text-slate-500 hover:text-[#113269] cursor-grab active:cursor-grabbing transition-colors"
+                        title="Clique e arraste para reordenar esta ação (#)"
+                      >
+                        <GripVertical className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                        <span className="font-extrabold text-slate-700">{itemObj.action.ordem || itemObj.globalIndex}</span>
+                      </div>
                     </td>
 
                     {/* Ação (O que) */}
